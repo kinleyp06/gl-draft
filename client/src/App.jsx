@@ -1,4 +1,5 @@
-// All pages and who can open them.
+// All pages and who can open them. Rooms, the meeting hall and the floor map are open to
+// everyone; booking (and everything after it) needs an account.
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
@@ -8,6 +9,7 @@ import NotFound from './pages/NotFound.jsx';
 import Login from './pages/auth/Login.jsx';
 import Register from './pages/auth/Register.jsx';
 import VerifyEmail from './pages/auth/VerifyEmail.jsx';
+import FloorMap from './pages/FloorMap.jsx';
 
 import Profile from './pages/guest/Profile.jsx';
 import BrowseRooms from './pages/guest/BrowseRooms.jsx';
@@ -37,13 +39,16 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
 
+        {/* Anyone, signed in or not: see rooms, the hall, availability and the floor map */}
+        <Route path="/rooms" element={<BrowseRooms />} />
+        <Route path="/hall" element={<BookHall />} />
+        <Route path="/floor-map" element={<FloorMap />} />
+
         {/* Any signed-in user */}
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<Profile />} />
-          <Route path="/rooms" element={<BrowseRooms />} />
           <Route path="/book/:roomId" element={<BookRoom />} />
           <Route path="/my-bookings" element={<MyBookings />} />
-          <Route path="/hall" element={<BookHall />} />
         </Route>
 
         <Route element={<ProtectedRoute roles={['Admin']} />}>

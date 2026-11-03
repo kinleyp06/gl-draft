@@ -1,9 +1,12 @@
 // Browse guest houses & rooms, check availability by date (per bed) and the bed-wise charge.
-import { useState } from 'react';
+// Open to everyone: visitors see rooms, photos and free beds; booking asks them to sign in.
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, qs } from '../../api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { BedPips, Empty, Field, KeyTag, Notice, addDaysStr, money, todayStr, useLoad } from '../../components/ui.jsx';
+import { PhotoSwitcher } from '../../components/Photo.jsx';
+import { roomPhotos } from '../../photos.js';
 
 export default function BrowseRooms() {
   const { user } = useAuth();
@@ -29,6 +32,12 @@ export default function BrowseRooms() {
     }
   };
 
+  // Show tonight's availability straight away, without pressing the button.
+  useEffect(() => {
+    if (search.guesthouse_id && results === null) find();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search.guesthouse_id]);
+
   const rate = (cat, type) => base.data?.rates.find((r) => r.guest_category === cat && r.charge_type === type)?.rate;
   const bookLink = (room, type) => `/book/${room.room_id}${qs({ check_in: search.check_in, check_out: search.check_out, type })}`;
 
@@ -37,10 +46,11 @@ export default function BrowseRooms() {
       <div className="page-head">
         <div>
           <h1>Find a room</h1>
-          <p>Pick your dates to see free beds. Rooms have 3 beds.</p>
+          <p>Pick your dates to see free beds. Rooms have 3 beds. <Link to="/floor-map">See the floor map</Link>.</p>
         </div>
       </div>
-      {!user.profile_complete && <Notice type="info">You can look around now. <Link to="/profile">Complete your profile</Link> before booking.</Notice>}
+      {!user && <Notice type="info">You can look around without an account. To book, <Link to="/login">sign in</Link> or <Link to="/register">create an account</Link>.</Notice>}
+      {user && !user.profile_complete && <Notice type="info">You can look around now. <Link to="/profile">Complete your profile</Link> before booking.</Notice>}
 
       <form className="panel row" onSubmit={find}>
         <Field label="Guest house">
@@ -80,7 +90,9 @@ export default function BrowseRooms() {
             {results.map((r) => {
               const closed = r.label === 'Not open for booking';
               return (
-                <div className="panel room-card" key={r.room_id}>
+                <div className="panel room-card with-photos" key={r.room_id}>
+                  <PhotoSwitcher photos={roomPhotos(r.room_number)} />
+                  <div className="room-body">
                   <KeyTag number={r.room_number} closed={closed || r.beds_free === 0} />
                   <div style={{ flex: 1 }}>
                     <h3>Room {r.room_number}</h3>
@@ -89,10 +101,15 @@ export default function BrowseRooms() {
                     <div><strong>{r.label}</strong></div>
                     {r.shared && <div className="small muted">Occupant allows sharing: {r.occupant_gender?.toLowerCase()} guests only.</div>}
                     {!r.bed_available_for_me && r.reason && <div className="small muted">{r.reason}</div>}
+                    {r.description && <div className="small muted">{r.description}</div>}
                     <div className="actions" style={{ marginTop: '0.6rem' }}>
-                      {r.bed_available_for_me && <Link className="btn small" to={bookLink(r, 'Per Bed')}>Book beds</Link>}
-                      {r.exclusive_available && <Link className="btn small secondary" to={bookLink(r, 'Exclusive')}>Book whole room</Link>}
+                      {!user && (r.bed_available_for_me || r.exclusive_available) && (
+                        <Link className="btn small" to={bookLink(r, r.bed_available_for_me ? 'Per Bed' : 'Exclusive')}>Sign in to book</Link>
+                      )}
+                      {user && r.bed_available_for_me && <Link className="btn small" to={bookLink(r, 'Per Bed')}>Book beds</Link>}
+                      {user && r.exclusive_available && <Link className="btn small secondary" to={bookLink(r, 'Exclusive')}>Book whole room</Link>}
                     </div>
+                  </div>
                   </div>
                 </div>
               );

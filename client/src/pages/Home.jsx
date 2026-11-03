@@ -1,8 +1,11 @@
-// Landing page: what G-Link is, guest houses, and the bed-wise rates.
+// Landing page: what G-Link is, guest house photos, the bed-wise rates, and links to see
+// rooms, the meeting hall and the floor map without signing in.
 import { Link, Navigate } from 'react-router-dom';
 import { api } from '../api.js';
 import { useAuth, homeFor } from '../context/AuthContext.jsx';
 import { KeyTag, money, useLoad } from '../components/ui.jsx';
+import { Gallery } from '../components/Photo.jsx';
+import { GUEST_HOUSE_PHOTOS } from '../photos.js';
 
 export default function Home() {
   const { user, loading } = useAuth();
@@ -19,21 +22,31 @@ export default function Home() {
     <>
       <section className="hero">
         <div>
+          <div className="eyebrow">College of Science and Technology</div>
           <h1>Book a bed or a room at the CST guest house</h1>
           <p className="muted">
-            See which beds are free for your dates, the charge per bed, and book online.
-            The admin reviews every request and you get the answer by email.
+            See which beds and meeting hall days are free, the charges and the floor map, with no account needed.
+            Sign in to book: the admin reviews every request and you get the answer by email.
           </p>
           <div className="actions">
-            <Link className="btn" to="/register">Create an account</Link>
-            <Link className="btn secondary" to="/login">Sign in</Link>
+            <Link className="btn" to="/rooms">See rooms and free beds</Link>
+            <Link className="btn secondary" to="/hall">Meeting hall</Link>
+            <Link className="btn secondary" to="/floor-map">Floor map</Link>
           </div>
+          <p className="small" style={{ marginTop: '0.9rem' }}>
+            Want to book? <Link to="/register" className="highlight">Create an account</Link> or <Link to="/login">sign in</Link>.
+          </p>
         </div>
         <div className="hero-tags" aria-hidden="true">
           <KeyTag number="101" />
           <KeyTag number="102" />
           <KeyTag number="103" />
         </div>
+      </section>
+
+      <section className="band">
+        <h2 style={{ marginTop: 0 }}>The guest house</h2>
+        <Gallery photos={GUEST_HOUSE_PHOTOS} />
       </section>
 
       <h2>Room charges per night</h2>
@@ -59,6 +72,7 @@ export default function Home() {
             <p className="muted small">{g.location}</p>
             <p>{g.description}</p>
             <p className="small">{g.room_count} rooms, {g.bed_count} beds</p>
+            <div className="actions"><Link className="btn small" to="/rooms">See free beds</Link><Link className="btn small secondary" to="/floor-map">Floor map</Link></div>
           </div>
         ))}
       </div>

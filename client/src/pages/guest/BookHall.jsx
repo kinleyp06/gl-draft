@@ -1,9 +1,12 @@
-// Book the meeting hall (25 seats): Nu. 5,000 per day + 5% GST. Separate from room bookings.
+// The meeting hall (25 seats): Nu. 5,000 per day + 5% GST. Separate from room bookings.
+// Anyone can see the hall, its photos, free days and the fee; booking needs an account.
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, qs } from '../../api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { BillBox, Field, Notice, money, todayStr, useLoad } from '../../components/ui.jsx';
+import { Gallery } from '../../components/Photo.jsx';
+import { HALL_PHOTOS } from '../../photos.js';
 
 export default function BookHall() {
   const { user } = useAuth();
@@ -40,23 +43,28 @@ export default function BookHall() {
     }
   };
 
-  if (!user.profile_complete) {
-    return (
-      <div className="panel narrow">
-        <h1>Complete your profile first</h1>
-        <Link className="btn" to="/profile">Complete profile</Link>
-      </div>
-    );
-  }
+  const canBook = user && user.profile_complete;
 
   return (
     <>
       <div className="page-head">
         <div>
-          <h1>Book the meeting hall</h1>
-          <p>{hall ? `${hall.hall_name}: ${hall.capacity} seats, ${money(hall.price_per_day)} per day plus GST.` : 'Loading...'} Dates do not need to match a room booking.</p>
+          <h1>Meeting hall</h1>
+          <p>Check which days are free and the fee. Dates do not need to match a room booking.</p>
         </div>
       </div>
+      <Gallery photos={HALL_PHOTOS} />
+      {hall && (
+        <div className="facts">
+          <div><strong>{hall.hall_name}</strong><span className="small muted">Name</span></div>
+          <div><strong>{hall.capacity} seats</strong><span className="small muted">Capacity</span></div>
+          <div><strong>{money(hall.price_per_day)} per day</strong><span className="small muted">plus 5% GST</span></div>
+          <div><strong>{hall.status === 'Available' ? 'Open for booking' : hall.status}</strong><span className="small muted">Status</span></div>
+        </div>
+      )}
+      <p className="small"><Link to="/floor-map">Where is the hall? See the campus map.</Link></p>
+      {!user && <Notice type="info">You can check free days and the fee without an account. To book, <Link to="/login" state={{ from: '/hall' }}>sign in</Link> or <Link to="/register">create an account</Link>.</Notice>}
+      {user && !user.profile_complete && <Notice type="info"><Link to="/profile">Complete your profile</Link> before booking the hall.</Notice>}
       <form className="panel stack" onSubmit={checkHall}>
         {halls.data?.length > 1 && (
           <Field label="Hall">
@@ -68,9 +76,9 @@ export default function BookHall() {
         <div className="row">
           <Field label="First day"><input type="date" required min={todayStr()} value={form.start_date} onChange={(e) => update({ start_date: e.target.value, end_date: e.target.value > form.end_date ? e.target.value : form.end_date })} /></Field>
           <Field label="Last day"><input type="date" required min={form.start_date} value={form.end_date} onChange={(e) => update({ end_date: e.target.value })} /></Field>
-          <Field label="Number of attendees"><input type="number" required min={1} max={hall?.capacity || 25} value={form.number_of_attendees} onChange={(e) => update({ number_of_attendees: e.target.value })} /></Field>
+          <Field label="Number of attendees"><input type="number" required={!!user} min={1} max={hall?.capacity || 25} value={form.number_of_attendees} onChange={(e) => update({ number_of_attendees: e.target.value })} /></Field>
         </div>
-        <Field label="Purpose"><input required maxLength={255} value={form.purpose} onChange={(e) => update({ purpose: e.target.value })} /></Field>
+        <Field label="Purpose" hint={user ? undefined : 'Needed when you book.'}><input required={!!user} maxLength={255} value={form.purpose} onChange={(e) => update({ purpose: e.target.value })} /></Field>
         <Notice type="error">{error}</Notice>
         <div><button className="btn secondary">Check the hall and fee</button></div>
       </form>
@@ -79,7 +87,10 @@ export default function BookHall() {
           <h2 style={{ marginTop: 0 }}>Fee for {check.days} day(s)</h2>
           {!check.available && <Notice type="error">{check.reason}</Notice>}
           <BillBox bill={check.bill} />
-          <div><button className="btn" disabled={!check.available || busy} onClick={submit}>Submit hall booking</button></div>
+          <div>
+            {canBook && <button className="btn" disabled={!check.available || busy} onClick={submit}>Submit hall booking</button>}
+            {!user && <Link className="btn" to="/login" state={{ from: '/hall' }}>Sign in to book the hall</Link>}
+          </div>
         </div>
       )}
     </>

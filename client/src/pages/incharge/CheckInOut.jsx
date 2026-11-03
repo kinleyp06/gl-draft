@@ -1,8 +1,9 @@
 // Incharge: view bookings, check guests in and out, mark no-shows,
 // and add extra people who arrive on an exclusive booking (charged per bed, or turned away if no beds are free).
+// At check-out the incharge records how the guest paid (online payment or cash); the guest is emailed a receipt.
 import { useState } from 'react';
 import { api, qs } from '../../api.js';
-import { BillBox, Empty, Field, Notice, todayStr, useAction, useLoad } from '../../components/ui.jsx';
+import { BillBox, Empty, Field, Notice, PaymentMethodSelect, money, todayStr, useAction, useLoad } from '../../components/ui.jsx';
 
 function ExtraPeople({ b, act, onDone }) {
   const [open, setOpen] = useState(false);
@@ -49,12 +50,39 @@ function ExtraPeople({ b, act, onDone }) {
   );
 }
 
+// Check-out: if the guest still owes money, choose how they paid before checking them out.
+function CheckOut({ b, act, onDone }) {
+  const [open, setOpen] = useState(false);
+  const [method, setMethod] = useState('');
+  const due = Number(b.amount_due || 0);
+  if (!open) return <button className="btn small" disabled={act.busy} onClick={() => setOpen(true)}>Check out</button>;
+  const done = async () => {
+    if (await act.run(() => api.post(`/incharge/bookings/${b.booking_id}/check-out`, due > 0 ? { payment_method: method } : {}))) onDone();
+  };
+  return (
+    <div className="checkout-box stack">
+      {due > 0
+        ? <>
+            <div>Amount to pay: <strong>{money(due)}</strong> <span className="small muted">(incl. GST)</span></div>
+            <Field label="Payment method"><PaymentMethodSelect id={`pay-${b.booking_id}`} value={method} onChange={setMethod} /></Field>
+          </>
+        : <div className="small">All bills are paid.</div>}
+      <div className="actions">
+        <button className="btn small" disabled={act.busy || (due > 0 && !method)} onClick={done}>
+          {due > 0 ? 'Record payment and check out' : 'Confirm check-out'}
+        </button>
+        <button className="btn secondary small" onClick={() => setOpen(false)}>Cancel</button>
+      </div>
+    </div>
+  );
+}
+
 function BookingTable({ rows, children }) {
   if (!rows.length) return <Empty>Nobody here.</Empty>;
   return (
     <div className="table-wrap">
       <table>
-        <thead><tr><th>#</th><th>Guest</th><th>Room</th><th>Dates</th><th>Type</th><th>Guests</th><th></th></tr></thead>
+        <thead><tr><th>#</th><th>Guest</th><th>Room</th><th>Dates</th><th>Type</th><th>Guests</th><th className="right">To pay</th><th></th></tr></thead>
         <tbody>
           {rows.map((b) => (
             <tr key={b.booking_id}>
@@ -64,6 +92,7 @@ function BookingTable({ rows, children }) {
               <td>{b.check_in_date} to {b.check_out_date}</td>
               <td>{b.booking_type}</td>
               <td>{b.number_of_guests}</td>
+              <td className="right">{Number(b.amount_due) > 0 ? money(b.amount_due) : <span className="muted small">Paid</span>}</td>
               <td>{children(b)}</td>
             </tr>
           ))}
@@ -105,9 +134,7 @@ export default function CheckInOut() {
           <BookingTable rows={data.in_house}>
             {(b) => (
               <div className="stack">
-                <div className="actions">
-                  <button className="btn small" disabled={act.busy} onClick={() => go(b.booking_id, 'check-out', `Check out booking #${b.booking_id}?`)}>Check out</button>
-                </div>
+                <CheckOut b={b} act={act} onDone={reload} />
                 <ExtraPeople b={b} act={act} onDone={reload} />
               </div>
             )}

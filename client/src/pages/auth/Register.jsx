@@ -32,7 +32,7 @@ export default function Register() {
       <div className="panel narrow">
         <h1>Check your email</h1>
         <Notice type="success">{done}</Notice>
-        <p className="small muted">Developing locally without email set up? The link is printed in the server terminal.</p>
+        <p className="small muted">The email comes from the G-Link Gmail account. Not there after a few minutes? Check your Spam folder, or ask for a new link on the sign in page.</p>
         <Link className="btn" to="/login">Go to sign in</Link>
       </div>
     );

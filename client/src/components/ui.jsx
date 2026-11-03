@@ -25,6 +25,23 @@ export function Field({ label, children, hint }) {
   );
 }
 
+// How a bill was paid. G-Link takes no money itself: staff choose what the guest used.
+export const ONLINE_PAYMENTS = ['mBOB', 'MPay', 'DK', 'TPay', 'DrukPay', 'BDBLePay'];
+
+export function PaymentMethodSelect({ value, onChange, id }) {
+  return (
+    <select id={id} value={value} onChange={(e) => onChange(e.target.value)} required>
+      <option value="">Choose how the guest paid</option>
+      <optgroup label="Online payment">
+        {ONLINE_PAYMENTS.map((m) => <option key={m} value={m}>{m}</option>)}
+      </optgroup>
+      <optgroup label="Cash">
+        <option value="Cash">Cash</option>
+      </optgroup>
+    </select>
+  );
+}
+
 export function Empty({ children }) {
   return <div className="empty">{children}</div>;
 }

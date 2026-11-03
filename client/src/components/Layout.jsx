@@ -1,11 +1,20 @@
-// Top bar with the menu for each role, and the page area.
+// Top bar with the logo, the menu for each role (visitors who are not signed in can see
+// rooms, the meeting hall and the floor map), and the page area.
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+
+const PUBLIC_MENU = [
+  ['/', 'Home'],
+  ['/rooms', 'Rooms'],
+  ['/hall', 'Meeting hall'],
+  ['/floor-map', 'Floor map'],
+];
 
 const MENUS = {
   Guest: [
     ['/rooms', 'Find a room'],
     ['/hall', 'Meeting hall'],
+    ['/floor-map', 'Floor map'],
     ['/my-bookings', 'My bookings'],
     ['/profile', 'Profile'],
   ],
@@ -31,13 +40,16 @@ MENUS['Super Admin'] = [['/superadmin/users', 'Users'], ...MENUS.Admin];
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const menu = user ? MENUS[user.role] || [] : [['/', 'Home']];
+  const menu = user ? MENUS[user.role] || [] : PUBLIC_MENU;
 
   return (
     <>
       <header className="topbar">
         <div className="topbar-inner">
-          <NavLink to="/" className="brand">G-Link <small>CST Guest House</small></NavLink>
+          <NavLink to="/" className="brand">
+            <img src="/logo.png" alt="College of Science and Technology logo" />
+            <span>G-Link <small>CST Guest House</small></span>
+          </NavLink>
           <nav className="nav" aria-label="Main">
             {menu.map(([to, label]) => (
               <NavLink key={to} to={to} end={to === '/admin' || to === '/'}>{label}</NavLink>

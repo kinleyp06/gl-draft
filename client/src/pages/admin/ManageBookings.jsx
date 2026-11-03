@@ -49,7 +49,7 @@ function Detail({ id, onChanged }) {
             : `shares with occupant #${s.host_id} ${s.host_name || ''} (${s.host_phone || s.host_email || 'no contact'})`
         )).join('; ')}</div>
       )}
-      {payments.length > 0 && <div className="small"><strong>Bills:</strong> {payments.map((p) => `${p.description}: ${money(p.total_amount)} (${p.payment_status})`).join('; ')}</div>}
+      {payments.length > 0 && <div className="small"><strong>Bills:</strong> {payments.map((p) => `${p.description}: ${money(p.total_amount)} (${p.payment_status}${p.payment_method ? ` by ${p.payment_method}` : ''})`).join('; ')}</div>}
       {extensions.length > 0 && <div className="small"><strong>Extensions:</strong> {extensions.map((e) => `to ${e.new_check_out_date} (${e.extension_status})`).join('; ')}</div>}
 
       {b.booking_status === 'Pending' && (

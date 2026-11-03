@@ -7,7 +7,8 @@ export default function ProtectedRoute({ roles }) {
   const { user, loading } = useAuth();
   const location = useLocation();
   if (loading) return <p className="muted">Loading...</p>;
-  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  // Keep the dates in the address (?check_in=...) so the guest comes back to the same booking after signing in.
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />;
   if (roles && user.role !== 'Super Admin' && !roles.includes(user.role)) {
     return <div className="notice error">You do not have permission to open this page.</div>;
   }

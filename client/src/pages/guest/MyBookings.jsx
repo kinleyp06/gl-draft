@@ -12,7 +12,7 @@ function Payments({ payments }) {
       {payments.map((p) => (
         <div className="bill-line" key={p.payment_id}>
           <span>{p.description || 'Charge'} <span className="muted small">(GST {money(p.gst_amount)})</span></span>
-          <span>{money(p.total_amount)} <Badge value={p.payment_status} /></span>
+          <span>{money(p.total_amount)} <Badge value={p.payment_status} />{p.payment_method && <span className="small muted"> by {p.payment_method}</span>}</span>
         </div>
       ))}
     </div>

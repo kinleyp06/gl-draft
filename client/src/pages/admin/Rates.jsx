@@ -1,5 +1,5 @@
 // Edit the rate table (rates per night before GST, and GST %).
-// International stays empty until the administration sets it; then it appears on the booking form.
+// Two kinds of guest only: RUB (Royal University of Bhutan) members and Non-RUB.
 import { useEffect, useState } from 'react';
 import { api } from '../../api.js';
 import { Notice, useAction, useLoad } from '../../components/ui.jsx';
@@ -17,7 +17,7 @@ export default function Rates() {
 
   return (
     <>
-      <div className="page-head"><div><h1>Rates</h1><p>Picked automatically from the guest category. Total = rate x beds x nights + GST.</p></div></div>
+      <div className="page-head"><div><h1>Rates</h1><p>RUB members and Non-RUB guests. The rate is picked from the guest's profile. Total = rate x beds x nights + GST.</p></div></div>
       <Notice type={act.msg.type}>{act.msg.text}</Notice>
       <Notice type="error">{error}</Notice>
       <div className="table-wrap">

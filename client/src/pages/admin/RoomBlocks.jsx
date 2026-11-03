@@ -27,20 +27,24 @@ export default function RoomBlocks() {
       <Notice type={act.msg.type}>{act.msg.text}</Notice>
       <Notice type="error">{error}</Notice>
       <form className="panel stack" onSubmit={save}>
-        <div className="row">
+        <div className="form-grid four">
           <Field label="Room">
             <select required value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })}>
               <option value="">Choose a room</option>
               {(data?.rooms || []).map((r) => <option key={r.room_id} value={r.room_id}>{r.guesthouse_name} - Room {r.room_number}</option>)}
             </select>
           </Field>
-          <Field label="Beds to block" hint="3 = whole room">
+          <Field label="Beds to block" hint="3 = the whole room">
             <input type="number" min={1} max={3} required value={form.beds_blocked} onChange={(e) => setForm({ ...form, beds_blocked: e.target.value })} />
           </Field>
-          <Field label="From"><input type="date" required value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} /></Field>
-          <Field label="Until (like a check-out date)"><input type="date" required min={addDaysStr(form.start_date, 1)} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} /></Field>
+          <Field label="From" hint="First blocked night">
+            <input type="date" required value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} />
+          </Field>
+          <Field label="Until" hint="Like a check-out date: free again that night">
+            <input type="date" required min={addDaysStr(form.start_date, 1)} value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} />
+          </Field>
+          <Field label="Reason" className="full"><input required maxLength={100} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} /></Field>
         </div>
-        <Field label="Reason"><input required maxLength={100} value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} /></Field>
         <div><button className="btn" disabled={act.busy}>Block beds</button></div>
       </form>
 

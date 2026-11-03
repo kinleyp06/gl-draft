@@ -29,6 +29,8 @@ add two more photos with its number.
 
 ## Meeting hall (3 photos), shown on the Meeting hall page
 
+The meeting hall is inside the guest house.
+
 | Save as | What to photograph |
 |---|---|
 | `hall/hall-1.jpg` | Whole hall from the entrance, showing the 25 seats |
@@ -39,9 +41,9 @@ add two more photos with its number.
 
 | Save as | What it shows |
 |---|---|
-| `floor-maps/floor-1.png` | Ground floor plan: rooms 101, 102, 103, stairs, washrooms and exits |
-| `floor-maps/floor-2.png` | First floor plan: rooms 201, 202, 203, stairs, washrooms and exits |
-| `floor-maps/campus-map.png` | CST campus map: where the guest house and the meeting hall are, with the main gate |
+| `floor-maps/floor-1.png` | Ground floor plan: rooms 101, 102, 103, stairs, washrooms, exits, and the meeting hall if it is on this floor |
+| `floor-maps/floor-2.png` | First floor plan: rooms 201, 202, 203, stairs, washrooms, exits, and the meeting hall if it is on this floor |
+| `floor-maps/campus-map.png` | CST campus map: where the guest house (with its meeting hall inside) is, with the main gate |
 
 Room numbers start with the floor number (1xx = ground floor, 2xx = first floor), so a new floor
 3 needs `floor-maps/floor-3.png`. A floor plan can be drawn in any tool (even PowerPoint or

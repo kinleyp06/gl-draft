@@ -15,9 +15,9 @@ export function money(n) {
   return `Nu. ${Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export function Field({ label, children, hint }) {
+export function Field({ label, children, hint, className = '' }) {
   return (
-    <label className="field">
+    <label className={`field ${className}`}>
       <span>{label}</span>
       {children}
       {hint && <small className="muted">{hint}</small>}

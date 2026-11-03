@@ -18,7 +18,7 @@ export function roomPhotos(roomNumber) {
   ];
 }
 
-// 3 pictures of the meeting hall (Meeting hall page)
+// 3 pictures of the meeting hall inside the guest house (Meeting hall page)
 export const HALL_PHOTOS = [
   { file: 'hall/hall-1.jpg', label: 'Meeting hall: whole room', hint: 'From the entrance, showing the 25 seats' },
   { file: 'hall/hall-2.jpg', label: 'Meeting hall: front', hint: 'Screen, projector or whiteboard at the front' },
@@ -35,13 +35,13 @@ export function floorPlan(floor, roomNumbers) {
   return {
     file: `floor-maps/floor-${floor}.png`,
     label: `Floor plan: ${floorName(floor)}`,
-    hint: `Plan of the ${floorName(floor).toLowerCase()} with rooms ${roomNumbers.join(', ')}, stairs, washrooms and exits marked`,
+    hint: `Plan of the ${floorName(floor).toLowerCase()} with rooms ${roomNumbers.join(', ')}, stairs, washrooms, exits, and the meeting hall if it is on this floor`,
   };
 }
 export const SITE_MAP = {
   file: 'floor-maps/campus-map.png',
   label: 'Campus map',
-  hint: 'Where the guest house and the meeting hall are on the CST campus, with the main gate',
+  hint: 'Where the guest house (with its meeting hall inside) is on the CST campus, with the main gate',
 };
 
 export const photoUrl = (file) => `${DIR}/${file}`;

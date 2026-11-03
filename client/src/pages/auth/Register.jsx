@@ -1,24 +1,27 @@
-// Sign up with email ID. A confirmation link is emailed (RUB accounts verify through official email).
+// Sign up with email ID. The form asks the same things as the Profile page (name, phone, CID,
+// gender, RUB member + staff ID + department), so the profile is complete from the start.
+// A confirmation link is emailed; the account works once it is confirmed.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api.js';
 import { Field, Notice } from '../../components/ui.jsx';
+import ProfileFields, { emptyProfile } from '../../components/ProfileFields.jsx';
 
 export default function Register() {
-  const [form, setForm] = useState({ first_name: '', last_name: '', email: '', password: '', confirm: '' });
+  const [account, setAccount] = useState({ email: '', password: '', confirm: '' });
+  const [profile, setProfile] = useState(emptyProfile);
   const [error, setError] = useState('');
   const [done, setDone] = useState('');
   const [busy, setBusy] = useState(false);
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const set = (k) => (e) => setAccount({ ...account, [k]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
-    if (form.password !== form.confirm) return setError('The two passwords do not match.');
+    if (account.password !== account.confirm) return setError('The two passwords do not match.');
     setBusy(true);
     try {
-      const { confirm, ...body } = form;
-      const res = await api.post('/auth/register', body);
+      const res = await api.post('/auth/register', { email: account.email, password: account.password, ...profile });
       setDone(res.message);
     } catch (err) {
       setError(err.message);
@@ -39,25 +42,34 @@ export default function Register() {
   }
 
   return (
-    <div className="panel narrow">
-      <h1>Create your account</h1>
-      <p className="muted small">RUB staff and students: use your official RUB email to get the RUB staff rate.</p>
-      <Notice type="error">{error}</Notice>
-      <form onSubmit={submit} className="stack">
-        <div className="row">
-          <Field label="First name"><input required maxLength={20} value={form.first_name} onChange={set('first_name')} /></Field>
-          <Field label="Last name"><input required maxLength={20} value={form.last_name} onChange={set('last_name')} /></Field>
+    <>
+      <div className="page-head">
+        <div>
+          <h1>Create your account</h1>
+          <p>The same details as your profile. You can change them later on the Profile page.</p>
         </div>
-        <Field label="Email"><input type="email" required maxLength={100} autoComplete="email" value={form.email} onChange={set('email')} /></Field>
-        <Field label="Password" hint="At least 8 characters">
-          <input type="password" required minLength={8} autoComplete="new-password" value={form.password} onChange={set('password')} />
-        </Field>
-        <Field label="Confirm password">
-          <input type="password" required minLength={8} autoComplete="new-password" value={form.confirm} onChange={set('confirm')} />
-        </Field>
-        <button className="btn" disabled={busy}>{busy ? 'Creating...' : 'Create account'}</button>
+      </div>
+      <form onSubmit={submit} className="panel stack">
+        <h2 className="form-section">Your details</h2>
+        <ProfileFields form={profile} setForm={setProfile} />
+
+        <h2 className="form-section">Sign-in details</h2>
+        <div className="form-grid">
+          <Field label="Email" className="full"><input type="email" required maxLength={100} autoComplete="email" value={account.email} onChange={set('email')} /></Field>
+          <Field label="Password" hint="At least 8 characters">
+            <input type="password" required minLength={8} autoComplete="new-password" value={account.password} onChange={set('password')} />
+          </Field>
+          <Field label="Confirm password">
+            <input type="password" required minLength={8} autoComplete="new-password" value={account.confirm} onChange={set('confirm')} />
+          </Field>
+        </div>
+
+        <Notice type="error">{error}</Notice>
+        <div className="actions">
+          <button className="btn" disabled={busy}>{busy ? 'Creating...' : 'Create account'}</button>
+        </div>
+        <p className="small" style={{ margin: 0 }}>Already have an account? <Link to="/login">Sign in</Link></p>
       </form>
-      <p className="small" style={{ marginTop: '1rem' }}>Already have an account? <Link to="/login">Sign in</Link></p>
-    </div>
+    </>
   );
 }

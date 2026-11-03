@@ -18,6 +18,7 @@ Calls to `/api` are passed to `http://localhost:5000` by `vite.config.js`. For a
 | `src/context/AuthContext.jsx` | Signed-in user, sign in / sign out, start page per role |
 | `src/components/Layout.jsx` | Top bar and menu for each role |
 | `src/components/ProtectedRoute.jsx` | Blocks pages for the wrong role |
+| `src/components/ProfileFields.jsx` | The profile form shared by Sign up and Profile (aligned grid, RUB member switch) |
 | `src/components/ui.jsx` | Shared bits: notices, badges, bill box, bed icons, key tag, form field, payment method dropdown, data loading |
 | `src/styles.css` | All styles; colours and fonts at the top in `:root` (Royal Blue #002789, Imperial Gold #A07A43, white / light gray, dark charcoal text) |
 | `src/photos.js`, `src/components/Photo.jsx` | Every picture the site shows (rooms, hall, guest house, floor maps) and the "Photo needed" placeholder |

@@ -1,4 +1,4 @@
-// The meeting hall (25 seats): Nu. 5,000 per day + 5% GST. Separate from room bookings.
+// The meeting hall (25 seats) inside the guest house: Nu. 5,000 per day + 5% GST. Booked separately from rooms.
 // Anyone can see the hall, its photos, free days and the fee; booking needs an account.
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -50,26 +50,26 @@ export default function BookHall() {
       <div className="page-head">
         <div>
           <h1>Meeting hall</h1>
-          <p>Check which days are free and the fee. Dates do not need to match a room booking.</p>
+          <p>The meeting hall is inside the guest house. Check which days are free and the fee; dates do not need to match a room booking.</p>
         </div>
       </div>
       <Gallery photos={HALL_PHOTOS} />
       {hall && (
         <div className="facts">
-          <div><strong>{hall.hall_name}</strong><span className="small muted">Name</span></div>
+          <div><strong>{hall.hall_name}</strong><span className="small muted">Inside {hall.guesthouse_name}</span></div>
           <div><strong>{hall.capacity} seats</strong><span className="small muted">Capacity</span></div>
           <div><strong>{money(hall.price_per_day)} per day</strong><span className="small muted">plus 5% GST</span></div>
-          <div><strong>{hall.status === 'Available' ? 'Open for booking' : hall.status}</strong><span className="small muted">Status</span></div>
+          <div><strong>{hall.status !== 'Available' ? hall.status : hall.guesthouse_status !== 'Available' ? `Guest house ${hall.guesthouse_status.toLowerCase()}` : 'Open for booking'}</strong><span className="small muted">Status</span></div>
         </div>
       )}
-      <p className="small"><Link to="/floor-map">Where is the hall? See the campus map.</Link></p>
+      <p className="small"><Link to="/floor-map">Where is it? See the guest house floor map.</Link></p>
       {!user && <Notice type="info">You can check free days and the fee without an account. To book, <Link to="/login" state={{ from: '/hall' }}>sign in</Link> or <Link to="/register">create an account</Link>.</Notice>}
       {user && !user.profile_complete && <Notice type="info"><Link to="/profile">Complete your profile</Link> before booking the hall.</Notice>}
       <form className="panel stack" onSubmit={checkHall}>
         {halls.data?.length > 1 && (
           <Field label="Hall">
             <select value={hallId} onChange={(e) => update({ hall_id: e.target.value })}>
-              {halls.data.map((h) => <option key={h.hall_id} value={h.hall_id}>{h.hall_name}</option>)}
+              {halls.data.map((h) => <option key={h.hall_id} value={h.hall_id}>{h.hall_name} ({h.guesthouse_name})</option>)}
             </select>
           </Field>
         )}

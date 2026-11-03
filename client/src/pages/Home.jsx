@@ -54,14 +54,14 @@ export default function Home() {
         <table>
           <thead><tr><th>Guest</th><th>One bed</th><th>Whole room (exclusive)</th></tr></thead>
           <tbody>
-            {['RUB staff', 'Other national'].map((c) => (
-              <tr key={c}><td>{c}</td><td>{money(rate(c, 'Per Bed'))}</td><td>{money(rate(c, 'Exclusive Room'))}</td></tr>
+            {['RUB', 'Non-RUB'].map((c) => (
+              <tr key={c}><td>{c === 'RUB' ? 'RUB member' : 'Non-RUB'}</td><td>{money(rate(c, 'Per Bed'))}</td><td>{money(rate(c, 'Exclusive Room'))}</td></tr>
             ))}
           </tbody>
         </table>
       </div>
       <p className="muted small" style={{ marginTop: '0.5rem' }}>
-        5% GST is added to every bill. Rooms have 3 beds. The meeting hall (25 seats) is Nu. 5,000 per day plus GST.
+        RUB = Royal University of Bhutan staff; everyone else pays the Non-RUB rate. 5% GST is added to every bill. Rooms have 3 beds. The meeting hall (25 seats) inside the guest house is Nu. 5,000 per day plus GST.
       </p>
 
       <h2>Guest houses</h2>

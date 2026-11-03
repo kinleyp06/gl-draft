@@ -1,6 +1,6 @@
-// Book a room: choose booking type (Exclusive / Per bed / Family-group), the rate is picked
-// from the guest category, check the bill (+5% GST), confirm the sharing notice if needed, submit.
-import { useEffect, useState } from 'react';
+// Book a room: choose booking type (Exclusive / Per bed / Family-group), check the bill (+5% GST),
+// confirm the sharing notice if needed, submit. The rate (RUB or Non-RUB) comes from the guest's profile.
+import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
@@ -11,7 +11,7 @@ const TYPES = [
   ['Family/Group', 'Family or group', 'You and up to 2 more people, each on their own bed.'],
   ['Exclusive', 'Whole room', 'The room is yours alone (1 occupant). Never shared.'],
 ];
-const emptyGuest = { full_name: '', gender: '', contact_number: '', citizenship_id: '', staff_id: '', guest_category: 'Other national' };
+const emptyGuest = { full_name: '', gender: '', contact_number: '', citizenship_id: '', staff_id: '', guest_category: 'Non-RUB' };
 
 export default function BookRoom() {
   const { roomId } = useParams();
@@ -26,7 +26,6 @@ export default function BookRoom() {
 
   const [form, setForm] = useState({
     booking_type: params.get('type') || 'Per Bed',
-    guest_category: '',
     check_in_date: params.get('check_in') || todayStr(),
     check_out_date: params.get('check_out') || addDaysStr(todayStr(), 1),
     purpose_of_visit: '',
@@ -38,10 +37,6 @@ export default function BookRoom() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (base.data && !form.guest_category) setForm((f) => ({ ...f, guest_category: base.data.options.categories[0] }));
-  }, [base.data, form.guest_category]);
-
   if (base.loading) return <p className="muted">Loading...</p>;
   if (base.error) return <Notice type="error">{base.error}</Notice>;
   const { options, room } = base.data;
@@ -50,7 +45,7 @@ export default function BookRoom() {
     return (
       <div className="panel narrow">
         <h1>Complete your profile first</h1>
-        <p>Your name, CID, gender, contact number and department are needed before your first booking.</p>
+        <p>Your name, CID, gender and contact number (and for RUB members, staff ID and department) are needed before your first booking.</p>
         <Link className="btn" to="/profile">Complete profile</Link>
       </div>
     );
@@ -133,12 +128,10 @@ export default function BookRoom() {
             <Field label="Check-out">
               <input type="date" required min={addDaysStr(form.check_in_date, 1)} value={form.check_out_date} onChange={(e) => update({ check_out_date: e.target.value })} />
             </Field>
-            <Field label="Your rate category" hint={options.is_rub_email ? '' : 'RUB staff rate needs an official RUB email.'}>
-              <select value={form.guest_category} onChange={(e) => update({ guest_category: e.target.value })}>
-                {options.categories.map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </Field>
           </div>
+          <p className="small muted" style={{ margin: 0 }}>
+            You pay the <strong className="highlight">{options.category}</strong> rate, from your profile. <Link to="/profile">Change on your profile</Link>.
+          </p>
           <Field label="Purpose of visit">
             <input required maxLength={255} value={form.purpose_of_visit} onChange={(e) => update({ purpose_of_visit: e.target.value })} />
           </Field>
@@ -159,19 +152,19 @@ export default function BookRoom() {
                   <Field label="Full name"><input required maxLength={50} value={g.full_name} onChange={(e) => setGuest(i, { full_name: e.target.value })} /></Field>
                   <Field label="Gender">
                     <select required value={g.gender} onChange={(e) => setGuest(i, { gender: e.target.value })}>
-                      <option value="">Choose</option><option>Male</option><option>Female</option><option>Other</option>
+                      <option value="">Choose</option><option>Male</option><option>Female</option>
                     </select>
                   </Field>
-                  <Field label="Rate category" hint="Family members of RUB staff use Other national">
+                  <Field label="RUB member?" hint="RUB members need their staff ID">
                     <select value={g.guest_category} onChange={(e) => setGuest(i, { guest_category: e.target.value })}>
-                      {options.guest_categories.map((c) => <option key={c}>{c}</option>)}
+                      {options.guest_categories.map((c) => <option key={c} value={c}>{c === 'RUB' ? 'RUB member' : 'Non-RUB'}</option>)}
                     </select>
                   </Field>
                 </div>
                 <div className="row">
                   <Field label="Contact number"><input inputMode="numeric" pattern="\d{8,11}" value={g.contact_number} onChange={(e) => setGuest(i, { contact_number: e.target.value })} /></Field>
                   <Field label="CID"><input maxLength={20} value={g.citizenship_id} onChange={(e) => setGuest(i, { citizenship_id: e.target.value })} /></Field>
-                  {g.guest_category === 'RUB staff' && (
+                  {g.guest_category === 'RUB' && (
                     <Field label="Staff ID"><input required maxLength={20} value={g.staff_id} onChange={(e) => setGuest(i, { staff_id: e.target.value })} /></Field>
                   )}
                 </div>

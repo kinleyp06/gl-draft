@@ -34,10 +34,11 @@ function Detail({ id, onChanged }) {
         <br />Purpose: {b.purpose_of_visit} | Guests: {b.number_of_guests} | Sharing allowed: {b.allow_sharing ? 'yes' : 'no'} | Extensions: {b.extension_count}
         {b.checked_in_at && <><br />Checked in {b.checked_in_at}{b.checked_out_at && `, out ${b.checked_out_at}`}</>}
       </div>
-      {user ? (
-        <div className="small"><strong>Booker:</strong> {user.first_name} {user.last_name}, {user.email}, {user.phone_number}, CID {user.citizenship_id}, {user.department}{user.sid && `, SID ${user.sid}`}</div>
-      ) : (
-        <div className="small"><strong>Entered by admin</strong> (international guest)</div>
+      {user && (
+        <div className="small">
+          <strong>Booker:</strong> {user.first_name} {user.last_name}, {user.email}, {user.phone_number}, CID {user.citizenship_id},{' '}
+          {user.is_rub_member ? <>RUB member, staff ID {user.sid}, {user.department}</> : 'Non-RUB'}
+        </div>
       )}
       {guests.length > 0 && (
         <div className="small"><strong>Guests:</strong> {guests.map((g) => `${g.full_name} (${g.gender}, ${g.guest_category}${g.contact_number ? `, ${g.contact_number}` : ''}${g.citizenship_id ? `, ID ${g.citizenship_id}` : ''})`).join('; ')}</div>

@@ -72,8 +72,8 @@ export default function BrowseRooms() {
       <div className="panel small">
         <strong>Charges per night (plus 5% GST)</strong>
         <div className="row" style={{ marginTop: '0.5rem' }}>
-          {['RUB staff', 'Other national'].map((c) => (
-            <div key={c}>{c}: {money(rate(c, 'Per Bed'))} per bed, {money(rate(c, 'Exclusive Room'))} whole room</div>
+          {['RUB', 'Non-RUB'].map((c) => (
+            <div key={c}>{c === 'RUB' ? 'RUB member' : 'Non-RUB'}: {money(rate(c, 'Per Bed'))} per bed, {money(rate(c, 'Exclusive Room'))} whole room</div>
           ))}
         </div>
       </div>

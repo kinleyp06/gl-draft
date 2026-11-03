@@ -1,5 +1,5 @@
-// Floor map: the plan of each floor with its rooms and tonight's free beds, plus the campus map
-// showing where the guest house and the meeting hall are. Open to everyone, no sign-in needed.
+// Floor map: the plan of each floor with its rooms and tonight's free beds, the meeting hall inside the
+// guest house, and the campus map showing where the guest house is. Open to everyone, no sign-in needed.
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, qs } from '../api.js';
@@ -72,18 +72,20 @@ export default function FloorMap() {
         </section>
       ))}
 
+      {(base.data?.halls || []).filter((h) => String(h.guesthouse_id) === String(guesthouseId)).map((h) => (
+        <section className="panel" key={h.hall_id}>
+          <h3>{h.hall_name} <span className="small muted">inside {h.guesthouse_name}</span></h3>
+          <p className="small">{h.capacity} seats, {money(h.price_per_day)} per day plus GST. It is marked on the floor plan of the floor it is on.</p>
+          <Link className="btn small" to="/hall">See free days</Link>
+        </section>
+      ))}
+
       <section className="panel">
-        <h3>Campus map: guest house and meeting hall</h3>
+        <h3>Campus map: how to find the guest house</h3>
         <div className="floor">
           <Photo photo={SITE_MAP} map />
           <div className="stack">
-            {(base.data?.halls || []).map((h) => (
-              <div key={h.hall_id}>
-                <strong>{h.hall_name}</strong>
-                <div className="small muted">{h.capacity} seats, {money(h.price_per_day)} per day plus GST</div>
-                <Link className="btn small" to="/hall" style={{ marginTop: '0.4rem' }}>See free days</Link>
-              </div>
-            ))}
+            <p className="small">{guesthouse ? `${guesthouse.guesthouse_name}, with its meeting hall inside.` : ''}</p>
             <p className="small muted">College of Science and Technology, Rinchending, Phuentsholing.</p>
           </div>
         </div>

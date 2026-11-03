@@ -21,7 +21,6 @@ import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import ManageBookings from './pages/admin/ManageBookings.jsx';
 import Extensions from './pages/admin/Extensions.jsx';
 import HallBookings from './pages/admin/HallBookings.jsx';
-import InternationalBooking from './pages/admin/InternationalBooking.jsx';
 import ManageRooms from './pages/admin/ManageRooms.jsx';
 import RoomBlocks from './pages/admin/RoomBlocks.jsx';
 import Rates from './pages/admin/Rates.jsx';
@@ -56,7 +55,6 @@ export default function App() {
           <Route path="/admin/bookings" element={<ManageBookings />} />
           <Route path="/admin/extensions" element={<Extensions />} />
           <Route path="/admin/halls" element={<HallBookings />} />
-          <Route path="/admin/international" element={<InternationalBooking />} />
           <Route path="/admin/rooms" element={<ManageRooms />} />
           <Route path="/admin/blocks" element={<RoomBlocks />} />
           <Route path="/admin/rates" element={<Rates />} />

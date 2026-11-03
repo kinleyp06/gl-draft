@@ -7,7 +7,7 @@ import { BillBox, Empty, Field, Notice, PaymentMethodSelect, money, todayStr, us
 
 function ExtraPeople({ b, act, onDone }) {
   const [open, setOpen] = useState(false);
-  const [people, setPeople] = useState([{ full_name: '', gender: '', guest_category: b.guest_category === 'International' ? 'International' : 'Other national', staff_id: '' }]);
+  const [people, setPeople] = useState([{ full_name: '', gender: '', guest_category: 'Non-RUB', staff_id: '' }]);
   const [bill, setBill] = useState(null);
   const free = b.capacity - b.number_of_guests;
   if (b.booking_type !== 'Exclusive') return null;
@@ -28,19 +28,19 @@ function ExtraPeople({ b, act, onDone }) {
               <Field label="Full name"><input value={p.full_name} maxLength={50} onChange={(e) => set(i, { full_name: e.target.value })} /></Field>
               <Field label="Gender">
                 <select value={p.gender} onChange={(e) => set(i, { gender: e.target.value })}>
-                  <option value="">Choose</option><option>Male</option><option>Female</option><option>Other</option>
+                  <option value="">Choose</option><option>Male</option><option>Female</option>
                 </select>
               </Field>
-              <Field label="Category">
+              <Field label="RUB member?">
                 <select value={p.guest_category} onChange={(e) => set(i, { guest_category: e.target.value })}>
-                  <option>RUB staff</option><option>Other national</option><option>International</option>
+                  <option value="RUB">RUB member</option><option value="Non-RUB">Non-RUB</option>
                 </select>
               </Field>
-              {p.guest_category === 'RUB staff' && <Field label="Staff ID"><input value={p.staff_id} onChange={(e) => set(i, { staff_id: e.target.value })} /></Field>}
+              {p.guest_category === 'RUB' && <Field label="Staff ID"><input value={p.staff_id} onChange={(e) => set(i, { staff_id: e.target.value })} /></Field>}
             </div>
           ))}
           <div className="actions">
-            {people.length < free && <button className="btn secondary small" onClick={() => setPeople([...people, { full_name: '', gender: '', guest_category: 'Other national', staff_id: '' }])}>Add person</button>}
+            {people.length < free && <button className="btn secondary small" onClick={() => setPeople([...people, { full_name: '', gender: '', guest_category: 'Non-RUB', staff_id: '' }])}>Add person</button>}
             <button className="btn small" onClick={save} disabled={act.busy}>Add and bill</button>
             <button className="btn secondary small" onClick={() => setOpen(false)}>Close</button>
           </div>

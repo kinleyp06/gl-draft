@@ -1,18 +1,19 @@
-// /api/halls and /api/hall-bookings : meeting hall booking (separate from room bookings)
+// /api/halls and /api/hall-bookings : meeting hall booking (separate from room bookings).
+// The hall is inside the guest house, so it is listed with its guest house and closes with it.
 const express = require('express');
 const { pool } = require('../config/db');
 const { HttpError, asyncHandler } = require('../utils/http');
 const v = require('../utils/validate');
 const { requireAuth } = require('../middleware/auth');
 const { requireCompleteProfile } = require('../services/users');
-const { readHallRequest, hallConflicts, getHall } = require('../services/hallRules');
+const { readHallRequest, hallConflicts, getHall, hallIsOpen, HALL_SELECT } = require('../services/hallRules');
 const { priceHall } = require('../services/pricing');
 const notify = require('../services/notify');
 
 const router = express.Router();
 
 router.get('/halls', asyncHandler(async (req, res) => {
-  const [rows] = await pool.query('SELECT * FROM halls ORDER BY hall_name');
+  const [rows] = await pool.query(`${HALL_SELECT} ORDER BY g.guesthouse_name, h.hall_name`);
   res.json({ halls: rows });
 }));
 
@@ -21,7 +22,7 @@ router.get('/halls/:id/availability', asyncHandler(async (req, res) => {
   const r = readHallRequest({ hall_id: req.params.id, ...req.query });
   const hall = await getHall(pool, r.hallId);
   const conflicts = await hallConflicts(pool, r.hallId, r.start, r.end);
-  const open = hall.status === 'Available';
+  const open = hallIsOpen(hall);
   res.json({
     available: open && conflicts.length === 0,
     reason: !open ? 'The hall is not open for booking right now.' : conflicts.length ? 'The hall is already booked on some of these days.' : '',
@@ -37,7 +38,7 @@ router.post('/hall-bookings', requireAuth, asyncHandler(async (req, res) => {
   v.maxLen(req.body.purpose, 255, 'Purpose');
   const attendees = v.positiveInt(req.body.number_of_attendees, 'Number of attendees');
   const hall = await getHall(pool, r.hallId);
-  if (hall.status !== 'Available') throw new HttpError(409, 'The hall is not open for booking right now.');
+  if (!hallIsOpen(hall)) throw new HttpError(409, 'The hall is not open for booking right now.');
   if (attendees > hall.capacity) throw new HttpError(400, `The hall seats up to ${hall.capacity} people.`);
   if ((await hallConflicts(pool, r.hallId, r.start, r.end)).length) throw new HttpError(409, 'The hall is already booked on some of these days.');
 

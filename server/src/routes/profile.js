@@ -5,31 +5,22 @@ const { pool } = require('../config/db');
 const { HttpError, asyncHandler } = require('../utils/http');
 const v = require('../utils/validate');
 const { requireAuth } = require('../middleware/auth');
-const { publicUser, isRubEmail } = require('../services/users');
+const { publicUser, readProfile } = require('../services/users');
 
 const router = express.Router();
 router.use(requireAuth);
 
 router.get('/', (req, res) => {
-  res.json({ user: publicUser(req.user), is_rub_email: isRubEmail(req.user.email) });
+  res.json({ user: publicUser(req.user) });
 });
 
+// Same fields as the sign-up form. The RUB member switch decides the rate (RUB or Non-RUB).
 router.put('/', asyncHandler(async (req, res) => {
-  const b = req.body;
-  v.required(b, ['first_name', 'last_name', 'phone_number', 'citizenship_id', 'gender', 'department']);
-  v.maxLen(b.first_name, 20, 'First name');
-  v.maxLen(b.last_name, 20, 'Last name');
-  v.phone(b.phone_number);
-  v.maxLen(b.citizenship_id, 20, 'Citizenship ID');
-  v.oneOf(b.gender, v.GENDERS, 'Gender');
-  v.maxLen(b.sid, 20, 'Staff/Student ID');
-  v.maxLen(b.department, 50, 'Department');
-
+  const p = readProfile(req.body);
   await pool.query(
     `UPDATE users SET first_name = ?, last_name = ?, phone_number = ?, citizenship_id = ?,
-            gender = ?, sid = ?, department = ? WHERE user_id = ?`,
-    [b.first_name.trim(), b.last_name.trim(), String(b.phone_number), String(b.citizenship_id).trim(),
-      b.gender, b.sid ? String(b.sid).trim() : null, b.department.trim(), req.user.user_id]
+            gender = ?, is_rub_member = ?, sid = ?, department = ? WHERE user_id = ?`,
+    [p.first_name, p.last_name, p.phone_number, p.citizenship_id, p.gender, p.is_rub_member, p.sid, p.department, req.user.user_id]
   );
   const [rows] = await pool.query('SELECT * FROM users WHERE user_id = ?', [req.user.user_id]);
   res.json({ message: 'Profile saved.', user: publicUser(rows[0]) });

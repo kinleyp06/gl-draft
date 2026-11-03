@@ -2,8 +2,9 @@
 const { HttpError } = require('./http');
 const { isValidDate } = require('./dates');
 
-const GENDERS = ['Male', 'Female', 'Other'];
-const CATEGORIES = ['RUB staff', 'Other national', 'International'];
+const GENDERS = ['Male', 'Female'];
+// Only two kinds of guest: RUB (Royal University of Bhutan) members and Non-RUB.
+const CATEGORIES = ['RUB', 'Non-RUB'];
 const BOOKING_TYPES = ['Exclusive', 'Per Bed', 'Family/Group'];
 // How a bill was paid. No money moves through G-Link; staff record the method the guest used.
 const ONLINE_PAYMENTS = ['mBOB', 'MPay', 'DK', 'TPay', 'DrukPay', 'BDBLePay'];

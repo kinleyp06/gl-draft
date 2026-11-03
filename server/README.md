@@ -21,14 +21,14 @@ npm run dev                  starts the API on http://localhost:5000
 | `src/services/bookingRequest.js` | Reads and checks the room booking form |
 | `src/services/hallRules.js` | Hall dates and overlap check |
 | `src/services/notify.js`, `email.js` | Every email, sent through the Gmail account in `.env` (required: the server will not start without it) |
-| `src/services/users.js` | Profile complete check, which rate categories a user may pick |
+| `src/services/users.js` | Profile form check (shared by sign-up and Profile), profile complete check, RUB / Non-RUB category from the profile |
 | `src/routes/*.js` | The API endpoints (list below) |
 | `scripts/` | `createSuperAdmin.js`, `checkDb.js`, `testEmail.js` |
 
 ## API endpoints
 | Method and path | Who | What |
 |---|---|---|
-| POST /api/auth/register | anyone | Sign up with email |
+| POST /api/auth/register | anyone | Sign up with email and the profile details |
 | POST /api/auth/verify-email | anyone | Confirm email from the emailed link |
 | POST /api/auth/resend-verification | anyone | Send the link again |
 | POST /api/auth/login | anyone | Sign in, returns token |
@@ -46,6 +46,6 @@ npm run dev                  starts the API on http://localhost:5000
 | POST /api/bookings/:id/extensions | owner | Request stay extension |
 | GET /api/halls, /api/halls/:id/availability | anyone | Hall and fee |
 | POST /api/hall-bookings, GET /api/hall-bookings/mine, POST /api/hall-bookings/:id/cancel | signed in | Hall bookings |
-| /api/admin/... | Admin, Super Admin | dashboard, bookings (approve, reject, change room, international), extensions, hall-bookings, halls, guesthouses, rooms, blocks, rates, payments |
+| /api/admin/... | Admin, Super Admin | dashboard, bookings (approve, reject, change room), extensions, hall-bookings, halls, guesthouses, rooms, blocks, rates, payments |
 | /api/incharge/... | Incharge, Admin, Super Admin | bookings for a day, check-in, check-out, no-show, extra-guests |
 | /api/superadmin/users... | Super Admin | list, create, change role/status, reset password |

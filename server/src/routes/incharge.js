@@ -78,7 +78,7 @@ router.post('/bookings/:id/extra-guests', asyncHandler(async (req, res) => {
     if (list.length > free) throw new HttpError(409, `No beds free for ${list.length} more: only ${free} bed(s) left in room ${b.room_number}. Turn the extra people away.`);
     const from = b.check_in_date > today() ? b.check_in_date : today();
     const nights = Math.max(1, daysBetween(from, b.check_out_date));
-    const guests = list.map((g, i) => cleanGuest(g, i, ['RUB staff', 'Other national', 'International'], from, b.check_out_date));
+    const guests = list.map((g, i) => cleanGuest(g, i, v.CATEGORIES, from, b.check_out_date));
     // Price only the extra beds: per-bed rate x beds x remaining nights + GST.
     const full = await priceRoom(conn, { bookingType: 'Exclusive', bookerCategory: b.guest_category, extraGuests: guests, nights });
     const extraLines = full.lines.slice(1);

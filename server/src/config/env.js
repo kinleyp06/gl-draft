@@ -12,10 +12,6 @@ const env = {
     database: process.env.DB_NAME || 'g_link',
   },
   jwtSecret: process.env.JWT_SECRET || 'dev_only_secret_change_me',
-  rubDomains: (process.env.RUB_EMAIL_DOMAINS || 'rub.edu.bt')
-    .split(',')
-    .map((d) => d.trim().toLowerCase())
-    .filter(Boolean),
   gstPercent: Number(process.env.GST_PERCENT) || 5,
   smtp: {
     host: process.env.SMTP_HOST || '',

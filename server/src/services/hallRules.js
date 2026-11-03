@@ -24,10 +24,17 @@ async function hallConflicts(conn, hallId, start, end, excludeId = 0) {
   return rows;
 }
 
+// A hall is inside a guest house: it comes with the guest house's name and status.
+const HALL_SELECT = `SELECT h.*, g.guesthouse_name, g.status AS guesthouse_status
+                       FROM halls h JOIN guest_houses g ON g.guesthouse_id = h.guesthouse_id`;
+
 async function getHall(conn, hallId, lock = false) {
-  const [rows] = await conn.query(`SELECT * FROM halls WHERE hall_id = ? ${lock ? 'FOR UPDATE' : ''}`, [hallId]);
+  const [rows] = await conn.query(`${HALL_SELECT} WHERE h.hall_id = ? ${lock ? 'FOR UPDATE' : ''}`, [hallId]);
   if (!rows[0]) throw new HttpError(404, 'Hall not found.');
   return rows[0];
 }
 
-module.exports = { readHallRequest, hallConflicts, getHall };
+// Open for booking only when both the hall and its guest house are open.
+const hallIsOpen = (hall) => hall.status === 'Available' && hall.guesthouse_status === 'Available';
+
+module.exports = { readHallRequest, hallConflicts, getHall, hallIsOpen, HALL_SELECT };

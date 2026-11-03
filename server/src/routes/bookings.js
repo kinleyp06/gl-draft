@@ -5,7 +5,7 @@ const { HttpError, asyncHandler } = require('../utils/http');
 const v = require('../utils/validate');
 const { daysBetween, today } = require('../utils/dates');
 const { requireAuth } = require('../middleware/auth');
-const { requireCompleteProfile, allowedCategories, allowedGuestCategories, isRubEmail, isProfileComplete } = require('../services/users');
+const { requireCompleteProfile, isProfileComplete, categoryOf } = require('../services/users');
 const { readRoomRequest, checkFitsRoom, MAX_NIGHTS } = require('../services/bookingRequest');
 const { checkRoom, getRoom } = require('../services/availability');
 const { priceRoom } = require('../services/pricing');
@@ -14,11 +14,9 @@ const notify = require('../services/notify');
 const router = express.Router();
 router.use(requireAuth);
 
-async function readGuestRequest(conn, user, body) {
-  return readRoomRequest(body, {
-    bookerCategories: await allowedCategories(conn, user),
-    guestCategories: await allowedGuestCategories(conn),
-  });
+// The booker's rate category (RUB or Non-RUB) comes from their profile, not from the form.
+function readGuestRequest(user, body) {
+  return readRoomRequest(body, { category: categoryOf(user), guestCategories: v.CATEGORIES });
 }
 
 function gendersOf(user, reqData) {
@@ -28,9 +26,8 @@ function gendersOf(user, reqData) {
 // What the booking form may offer this user.
 router.get('/options', asyncHandler(async (req, res) => {
   res.json({
-    categories: await allowedCategories(pool, req.user),
-    guest_categories: await allowedGuestCategories(pool),
-    is_rub_email: isRubEmail(req.user.email),
+    category: categoryOf(req.user),
+    guest_categories: v.CATEGORIES,
     profile_complete: isProfileComplete(req.user),
     gender: req.user.gender,
     max_nights: MAX_NIGHTS,
@@ -40,7 +37,7 @@ router.get('/options', asyncHandler(async (req, res) => {
 // Check availability + bill before submitting (nothing is saved).
 router.post('/quote', asyncHandler(async (req, res) => {
   requireCompleteProfile(req.user);
-  const r = await readGuestRequest(pool, req.user, req.body);
+  const r = readGuestRequest(req.user, req.body);
   const room = await getRoom(pool, r.roomId);
   checkFitsRoom(r, room);
   const avail = await checkRoom(pool, room, {
@@ -58,7 +55,7 @@ router.post('/quote', asyncHandler(async (req, res) => {
 router.post('/', asyncHandler(async (req, res) => {
   const user = req.user;
   requireCompleteProfile(user);
-  const r = await readGuestRequest(pool, user, req.body);
+  const r = readGuestRequest(user, req.body);
 
   const { booking, bill, hostIds } = await withTransaction(async (conn) => {
     const room = await getRoom(conn, r.roomId, true); // locks the room row until commit

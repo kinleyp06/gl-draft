@@ -20,7 +20,7 @@ async function getRate(conn, category, chargeType) {
 /**
  * Prices a room stay.
  * bookingType: 'Exclusive' | 'Per Bed' | 'Family/Group'
- * bookerCategory: category of the main guest
+ * bookerCategory: category of the main guest (RUB or Non-RUB, from their profile)
  * extraGuests: [{ guest_category, full_name }] - each takes one bed at their own per-bed rate
  *   (for Exclusive, these are extra people added by the Incharge at check-in)
  * nights: number of nights
@@ -52,9 +52,7 @@ async function priceExistingBooking(conn, booking, nights) {
     'SELECT full_name, guest_category FROM booking_guests WHERE booking_id = ? ORDER BY guest_id',
     [booking.booking_id]
   );
-  // For admin-entered bookings (no user), the first guest row is the main guest.
-  const extraGuests = booking.user_id ? guests : guests.slice(1);
-  return priceRoom(conn, { bookingType: booking.booking_type, bookerCategory: booking.guest_category, extraGuests, nights });
+  return priceRoom(conn, { bookingType: booking.booking_type, bookerCategory: booking.guest_category, extraGuests: guests, nights });
 }
 
 function priceHall(hall, days) {

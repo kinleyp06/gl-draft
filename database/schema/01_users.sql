@@ -1,5 +1,7 @@
 -- 1. Users: everyone who can log in (Guest, Incharge, Admin, Super Admin)
--- Profile fields (phone, CID, gender, SID, department) are filled in before the first booking.
+-- Profile fields (phone, CID, gender) are filled in at sign-up. Only two kinds of guest: RUB members
+-- (Royal University of Bhutan) and Non-RUB. is_rub_member sets the rate; RUB members also give their
+-- staff ID (sid) and department/affiliation.
 CREATE TABLE IF NOT EXISTS users (
   user_id         INT AUTO_INCREMENT PRIMARY KEY,
   first_name      VARCHAR(20)  NOT NULL,
@@ -8,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
   email_verified  BOOLEAN      NOT NULL DEFAULT FALSE,
   phone_number    VARCHAR(11)  NULL,
   citizenship_id  VARCHAR(20)  NULL UNIQUE,
-  gender          ENUM('Male','Female','Other') NULL,
+  gender          ENUM('Male','Female') NULL,
+  is_rub_member   BOOLEAN      NOT NULL DEFAULT FALSE,
   sid             VARCHAR(20)  NULL,
   department      VARCHAR(50)  NULL,
   password        VARCHAR(60)  NOT NULL,

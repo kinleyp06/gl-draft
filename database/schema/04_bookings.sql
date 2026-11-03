@@ -1,12 +1,12 @@
--- 4. Bookings: one room booking. user_id is NULL when an admin enters it for an international guest.
+-- 4. Bookings: one room booking by a signed-in guest. guest_category (RUB or Non-RUB) is copied from the
+-- guest's profile when they book, so the bill stays the same even if the profile changes later.
 CREATE TABLE IF NOT EXISTS bookings (
   booking_id        INT AUTO_INCREMENT PRIMARY KEY,
-  user_id           INT  NULL,
-  created_by        INT  NULL,
+  user_id           INT  NOT NULL,
   room_id           INT  NOT NULL,
   booking_type      ENUM('Exclusive','Per Bed','Family/Group') NOT NULL,
-  guest_category    ENUM('RUB staff','Other national','International') NOT NULL,
-  gender            ENUM('Male','Female','Other') NOT NULL,
+  guest_category    ENUM('RUB','Non-RUB') NOT NULL,
+  gender            ENUM('Male','Female') NOT NULL,
   check_in_date     DATE NOT NULL,
   check_out_date    DATE NOT NULL,
   booking_date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -21,7 +21,6 @@ CREATE TABLE IF NOT EXISTS bookings (
   checked_out_at    DATETIME NULL,
   checked_by        INT  NULL,
   CONSTRAINT fk_bookings_user       FOREIGN KEY (user_id)     REFERENCES users(user_id),
-  CONSTRAINT fk_bookings_created_by FOREIGN KEY (created_by)  REFERENCES users(user_id),
   CONSTRAINT fk_bookings_room       FOREIGN KEY (room_id)     REFERENCES rooms(room_id),
   CONSTRAINT fk_bookings_approved   FOREIGN KEY (approved_by) REFERENCES users(user_id),
   CONSTRAINT fk_bookings_checked    FOREIGN KEY (checked_by)  REFERENCES users(user_id),

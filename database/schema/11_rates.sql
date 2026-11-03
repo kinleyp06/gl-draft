@@ -1,7 +1,7 @@
 -- 11. Rates: admin-editable. One row per guest_category + charge_type. rate is per night, before GST.
 CREATE TABLE IF NOT EXISTS rates (
   rate_id         INT AUTO_INCREMENT PRIMARY KEY,
-  guest_category  ENUM('RUB staff','Other national','International') NOT NULL,
+  guest_category  ENUM('RUB','Non-RUB') NOT NULL,
   charge_type     ENUM('Per Bed','Exclusive Room') NOT NULL,
   rate            DECIMAL(10,2) NULL,
   gst_percent     DECIMAL(4,2)  NOT NULL DEFAULT 5.00,

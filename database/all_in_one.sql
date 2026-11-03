@@ -9,7 +9,9 @@ USE g_link;
 
 -- ===================== schema/01_users.sql =====================
 -- 1. Users: everyone who can log in (Guest, Incharge, Admin, Super Admin)
--- Profile fields (phone, CID, gender, SID, department) are filled in before the first booking.
+-- Profile fields (phone, CID, gender) are filled in at sign-up. Only two kinds of guest: RUB members
+-- (Royal University of Bhutan) and Non-RUB. is_rub_member sets the rate; RUB members also give their
+-- staff ID (sid) and department/affiliation.
 CREATE TABLE IF NOT EXISTS users (
   user_id         INT AUTO_INCREMENT PRIMARY KEY,
   first_name      VARCHAR(20)  NOT NULL,
@@ -18,7 +20,8 @@ CREATE TABLE IF NOT EXISTS users (
   email_verified  BOOLEAN      NOT NULL DEFAULT FALSE,
   phone_number    VARCHAR(11)  NULL,
   citizenship_id  VARCHAR(20)  NULL UNIQUE,
-  gender          ENUM('Male','Female','Other') NULL,
+  gender          ENUM('Male','Female') NULL,
+  is_rub_member   BOOLEAN      NOT NULL DEFAULT FALSE,
   sid             VARCHAR(20)  NULL,
   department      VARCHAR(50)  NULL,
   password        VARCHAR(60)  NOT NULL,
@@ -54,15 +57,15 @@ CREATE TABLE IF NOT EXISTS rooms (
 ) ENGINE=InnoDB;
 
 -- ===================== schema/04_bookings.sql =====================
--- 4. Bookings: one room booking. user_id is NULL when an admin enters it for an international guest.
+-- 4. Bookings: one room booking by a signed-in guest. guest_category (RUB or Non-RUB) is copied from the
+-- guest's profile when they book, so the bill stays the same even if the profile changes later.
 CREATE TABLE IF NOT EXISTS bookings (
   booking_id        INT AUTO_INCREMENT PRIMARY KEY,
-  user_id           INT  NULL,
-  created_by        INT  NULL,
+  user_id           INT  NOT NULL,
   room_id           INT  NOT NULL,
   booking_type      ENUM('Exclusive','Per Bed','Family/Group') NOT NULL,
-  guest_category    ENUM('RUB staff','Other national','International') NOT NULL,
-  gender            ENUM('Male','Female','Other') NOT NULL,
+  guest_category    ENUM('RUB','Non-RUB') NOT NULL,
+  gender            ENUM('Male','Female') NOT NULL,
   check_in_date     DATE NOT NULL,
   check_out_date    DATE NOT NULL,
   booking_date      DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -77,7 +80,6 @@ CREATE TABLE IF NOT EXISTS bookings (
   checked_out_at    DATETIME NULL,
   checked_by        INT  NULL,
   CONSTRAINT fk_bookings_user       FOREIGN KEY (user_id)     REFERENCES users(user_id),
-  CONSTRAINT fk_bookings_created_by FOREIGN KEY (created_by)  REFERENCES users(user_id),
   CONSTRAINT fk_bookings_room       FOREIGN KEY (room_id)     REFERENCES rooms(room_id),
   CONSTRAINT fk_bookings_approved   FOREIGN KEY (approved_by) REFERENCES users(user_id),
   CONSTRAINT fk_bookings_checked    FOREIGN KEY (checked_by)  REFERENCES users(user_id),
@@ -88,16 +90,16 @@ CREATE TABLE IF NOT EXISTS bookings (
 
 -- ===================== schema/05_booking_guests.sql =====================
 -- 5. Booking_Guests: additional guests on a booking (the booker comes from users).
--- For admin-entered international bookings, ALL guests (including the main guest) are stored here.
+-- Each is RUB (with staff ID) or Non-RUB and pays the per-bed rate of their own category.
 CREATE TABLE IF NOT EXISTS booking_guests (
   guest_id        INT AUTO_INCREMENT PRIMARY KEY,
   booking_id      INT NOT NULL,
   full_name       VARCHAR(50) NOT NULL,
-  gender          ENUM('Male','Female','Other') NOT NULL,
+  gender          ENUM('Male','Female') NOT NULL,
   contact_number  VARCHAR(11) NULL,
   citizenship_id  VARCHAR(20) NULL,
   staff_id        VARCHAR(20) NULL,
-  guest_category  ENUM('RUB staff','Other national','International') NOT NULL,
+  guest_category  ENUM('RUB','Non-RUB') NOT NULL,
   arrival_date    DATE NOT NULL,
   departure_date  DATE NOT NULL,
   CONSTRAINT fk_guests_booking FOREIGN KEY (booking_id) REFERENCES bookings(booking_id) ON DELETE CASCADE
@@ -154,13 +156,16 @@ CREATE TABLE IF NOT EXISTS room_blocks (
 ) ENGINE=InnoDB;
 
 -- ===================== schema/09_halls.sql =====================
--- 9. Halls: meeting halls (one 25-seater hall, Nu. 5,000 per day before GST)
+-- 9. Halls: meeting halls (one 25-seater hall, Nu. 5,000 per day before GST). A hall is inside a guest house,
+-- so it belongs to that guest house and is closed when the guest house is closed.
 CREATE TABLE IF NOT EXISTS halls (
   hall_id        INT AUTO_INCREMENT PRIMARY KEY,
+  guesthouse_id  INT           NOT NULL,
   hall_name      VARCHAR(50)   NOT NULL,
   capacity       INT           NOT NULL,
   price_per_day  DECIMAL(10,2) NOT NULL,
-  status         ENUM('Available','Closed','Maintenance') NOT NULL DEFAULT 'Available'
+  status         ENUM('Available','Closed','Maintenance') NOT NULL DEFAULT 'Available',
+  CONSTRAINT fk_halls_guesthouse FOREIGN KEY (guesthouse_id) REFERENCES guest_houses(guesthouse_id)
 ) ENGINE=InnoDB;
 
 -- ===================== schema/10_hall_bookings.sql =====================
@@ -189,7 +194,7 @@ CREATE TABLE IF NOT EXISTS hall_bookings (
 -- 11. Rates: admin-editable. One row per guest_category + charge_type. rate is per night, before GST.
 CREATE TABLE IF NOT EXISTS rates (
   rate_id         INT AUTO_INCREMENT PRIMARY KEY,
-  guest_category  ENUM('RUB staff','Other national','International') NOT NULL,
+  guest_category  ENUM('RUB','Non-RUB') NOT NULL,
   charge_type     ENUM('Per Bed','Exclusive Room') NOT NULL,
   rate            DECIMAL(10,2) NULL,
   gst_percent     DECIMAL(4,2)  NOT NULL DEFAULT 5.00,
@@ -222,14 +227,12 @@ CREATE TABLE IF NOT EXISTS payments (
 ) ENGINE=InnoDB;
 
 -- ===================== seeds/01_rates.sql =====================
--- Starting rates (per night, before 5% GST). International stays blank (NULL) until the administration sets it.
+-- Starting rates (per night, before 5% GST). Two kinds of guest: RUB (Royal University of Bhutan) members and Non-RUB.
 INSERT INTO rates (guest_category, charge_type, rate, gst_percent) VALUES
-  ('RUB staff',      'Per Bed',        250.00, 5.00),
-  ('RUB staff',      'Exclusive Room', 500.00, 5.00),
-  ('Other national', 'Per Bed',        400.00, 5.00),
-  ('Other national', 'Exclusive Room', 800.00, 5.00),
-  ('International',  'Per Bed',        NULL,   5.00),
-  ('International',  'Exclusive Room', NULL,   5.00)
+  ('RUB',     'Per Bed',        250.00, 5.00),
+  ('RUB',     'Exclusive Room', 500.00, 5.00),
+  ('Non-RUB', 'Per Bed',        400.00, 5.00),
+  ('Non-RUB', 'Exclusive Room', 800.00, 5.00)
 ON DUPLICATE KEY UPDATE guest_category = guest_category;
 
 -- ===================== seeds/02_guest_houses_and_rooms.sql =====================
@@ -248,7 +251,8 @@ INSERT INTO rooms (guesthouse_id, room_number, room_type, capacity, room_status,
 ON DUPLICATE KEY UPDATE room_type = VALUES(room_type);
 
 -- ===================== seeds/03_halls.sql =====================
-INSERT INTO halls (hall_id, hall_name, capacity, price_per_day, status) VALUES
-  (1, 'Meeting Hall', 25, 5000.00, 'Available')
+-- The meeting hall is inside the CST guest house (guesthouse_id 1).
+INSERT INTO halls (hall_id, guesthouse_id, hall_name, capacity, price_per_day, status) VALUES
+  (1, 1, 'Meeting Hall', 25, 5000.00, 'Available')
 ON DUPLICATE KEY UPDATE hall_name = VALUES(hall_name);
 

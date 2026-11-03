@@ -200,7 +200,8 @@ CREATE TABLE IF NOT EXISTS rates (
 ) ENGINE=InnoDB;
 
 -- ===================== schema/12_payments.sql =====================
--- 12. Payments: the bill for a room OR hall booking. No online gateway; only records the charge and if it was paid.
+-- 12. Payments: the bill for a room OR hall booking. No online gateway; only records the charge, if it was paid,
+-- and how it was paid (payment_method: an online wallet/app or Cash), chosen at check-out or when the admin marks it paid.
 -- total = subtotal + gst_amount. A booking can have several rows (e.g. extra nights from an extension).
 CREATE TABLE IF NOT EXISTS payments (
   payment_id       INT AUTO_INCREMENT PRIMARY KEY,
@@ -212,6 +213,7 @@ CREATE TABLE IF NOT EXISTS payments (
   total_amount     DECIMAL(10,2) NOT NULL,
   payment_status   ENUM('Unpaid','Paid') NOT NULL DEFAULT 'Unpaid',
   paid_at          DATETIME NULL,
+  payment_method   ENUM('mBOB','MPay','DK','TPay','DrukPay','BDBLePay','Cash') NULL,
   recorded_by      INT NULL,
   CONSTRAINT fk_pay_booking FOREIGN KEY (booking_id)      REFERENCES bookings(booking_id),
   CONSTRAINT fk_pay_hall    FOREIGN KEY (hall_booking_id) REFERENCES hall_bookings(hall_booking_id),

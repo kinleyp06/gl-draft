@@ -130,7 +130,7 @@ Open `server\.env` and change:
 - `DB_PASSWORD=` your MySQL root password
 - `JWT_SECRET=` any long random text (for example 40 random letters)
 - `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASSWORD` for the ICT unit account
-- Leave `SMTP_HOST` empty for now: emails will be **printed in this terminal** instead of being sent (you need this for the email confirmation link while testing).
+- `SMTP_USER`, `SMTP_PASS` and `MAIL_FROM`: the team Gmail account and its **App password**. These are **required**: every confirmation link and booking notice is sent by real email, and the server will not start without them. See **Email setup** below.
 
 `.env` is in `.gitignore`. Never commit it.
 
@@ -141,14 +141,15 @@ npm install
 npm run check-db
 ```
 
-All 12 lines must say `OK`. If you get "Access denied", the password in `.env` is wrong.
+All 12 lines and `payments.payment_method` must say `OK`. If you get "Access denied", the password in `.env` is wrong. If `payments.payment_method` says `MISSING`, run `database/updates/01_add_payment_method.sql` once in Workbench.
 
 ```
+npm run test-email -- your-own-email@gmail.com
 npm run create-super-admin
 npm run dev
 ```
 
-You should see `G-Link API running on http://localhost:5000`. Open http://localhost:5000/api/health in the browser: it must show `"database":"connected"`.
+`test-email` must say `Sent.` and the email must arrive (check Spam). Then you should see `Email ready: sending as ...` and `G-Link API running on http://localhost:5000`. Open http://localhost:5000/api/health in the browser: it must show `"database":"connected"`.
 
 Leave this terminal running.
 
@@ -240,10 +241,11 @@ From now on keep working in your branch, and bring `main` into it before startin
 | Sign in | `/login` | `pages/auth/Login.jsx` | everyone | Sign in with email ID, then "check role" sends each role to its own start page |
 | Email confirmation | `/verify-email` | `pages/auth/VerifyEmail.jsx` | everyone | Accounts verified through their email |
 | Profile | `/profile` | `pages/guest/Profile.jsx` | everyone | Edit profile; completed before the first booking (name, CID, SID, contact, gender, department) |
-| Find a room | `/rooms` | `pages/guest/BrowseRooms.jsx` | Guest | Browse guest houses and rooms, availability by date per bed, bed-wise charge, shared-room label |
+| Find a room | `/rooms` | `pages/guest/BrowseRooms.jsx` | **everyone** (sign in to book) | Browse guest houses and rooms with photos, availability by date per bed, bed-wise charge, shared-room label |
+| Floor map | `/floor-map` | `pages/FloorMap.jsx` | **everyone** | Floor plan of each floor with its rooms and tonight's free beds, campus map with the guest house and hall |
 | Book a room | `/book/:roomId` | `pages/guest/BookRoom.jsx` | Guest | Exclusive / Per bed / Family-group, rate from guest category, bill + 5% GST, allow-sharing tick box, sharing notice to confirm |
 | My bookings | `/my-bookings` | `pages/guest/MyBookings.jsx` | Guest | Room and hall bookings in separate sections, bills, cancel, request stay extension, who shares my room |
-| Meeting hall | `/hall` | `pages/guest/BookHall.jsx` | Guest | Book the 25-seat hall, Nu. 5,000/day + GST |
+| Meeting hall | `/hall` | `pages/guest/BookHall.jsx` | **everyone** (sign in to book) | Hall photos and details, free days, Nu. 5,000/day + GST; book the 25-seat hall |
 | Dashboard | `/admin` | `pages/admin/AdminDashboard.jsx` | Admin | What is waiting today |
 | Bookings | `/admin/bookings` | `pages/admin/ManageBookings.jsx` | Admin | Review requests (approve/reject sets approved_by + approval_date), contact details, change rooms for others |
 | Extensions | `/admin/extensions` | `pages/admin/Extensions.jsx` | Admin | Approve stay extensions (beds free check, new check-out, extension count +1, extra nights billed) |
@@ -252,8 +254,8 @@ From now on keep working in your branch, and bring `main` into it before startin
 | Rooms | `/admin/rooms` | `pages/admin/ManageRooms.jsx` | Admin | Manage guest houses, rooms and room availability |
 | Blocks | `/admin/blocks` | `pages/admin/RoomBlocks.jsx` | Admin | Block rooms/beds for VIP or official guests (no booking made) |
 | Rates | `/admin/rates` | `pages/admin/Rates.jsx` | Admin | Edit rate table (rates, GST); set International rates |
-| Payments | `/admin/payments` | `pages/admin/Payments.jsx` | Admin | Bills and paid / unpaid (no online payment) |
-| Check-in / out | `/incharge` | `pages/incharge/CheckInOut.jsx` | Incharge (and Admin) | View bookings, check in, check out (Completed), no-show (Cancelled), extra people on exclusive booking |
+| Payments | `/admin/payments` | `pages/admin/Payments.jsx` | Admin | Bills, paid / unpaid, and the payment method (mBOB, MPay, DK, TPay, DrukPay, BDBLePay or Cash) |
+| Check-in / out | `/incharge` | `pages/incharge/CheckInOut.jsx` | Incharge (and Admin) | View bookings, check in, check out with the payment method (Completed), no-show (Cancelled), extra people on exclusive booking |
 | Users | `/superadmin/users` | `pages/superadmin/ManageUsers.jsx` | Super Admin | Manage admins, incharges and users (role, active/inactive, new staff accounts, password reset) |
 
 Super Admin can open every page (full access).
@@ -274,20 +276,23 @@ If you want the history to show this, copy one file at a time into the branch an
 
 ## Part 6: Test every flow (do this after Part 5)
 
-Keep the **server terminal visible**: while `SMTP_HOST` is empty, every email (confirmation links, booking notices) is printed there.
+Use **real email addresses you can open** for every test account (for example your own Gmail and your RUB email): the confirmation links and booking notices arrive in those inboxes. Check Spam if something does not arrive.
+
+**0. Without signing in (visitors)**
+- Open http://localhost:5173 while signed out. **Rooms**, **Meeting hall** and **Floor map** all open, show free beds / free days, prices and photo placeholders. Clicking **Sign in to book** asks you to sign in, then brings you back to the same room and dates.
 
 **A. Roles and sign in (Role-Based Access Flow)**
 1. Sign in at `/login` with the Super Admin email/password from `server/.env`. You land on **Users**.
 2. Create an **Admin** and an **Incharge** account there.
-3. Sign out. Go to **Sign up** and create a guest, ideally with an `@rub.edu.bt` email (any address works in dev mode because the email is only printed).
-4. Copy the link from the server terminal into the browser to confirm the email, then sign in.
+3. Sign out. Go to **Sign up** and create a guest, ideally with an `@rub.edu.bt` email you can open.
+4. Open that inbox, click **Confirm my email** in the G-Link email, then sign in.
 5. You are sent to **Profile** first. Fill it in (pick **Male**). Save: you go to **Find a room**.
 
 **B. Room booking (Booking Process Flow)**
 6. Pick dates and **Check availability**. Every room shows 3 free beds.
 7. On room 101 click **Book beds** > keep **One bed** > fill purpose > tick **Allow sharing** > **Check availability and price**. The bill shows rate x nights, GST 5% as its own line, and the total. The rate category is RUB staff only for a RUB email.
-8. **Submit booking**. The server terminal prints the email to the admins. My bookings shows **Pending**.
-9. Sign in as the Admin > **Bookings** > click the row > **Approve**. The guest's email is printed with the amount, and **Payments** has a new unpaid bill.
+8. **Submit booking**. The admins get an email. My bookings shows **Pending**.
+9. Sign in as the Admin > **Bookings** > click the row > **Approve**. The guest gets an approval email with the amount, and **Payments** has a new unpaid bill. (**Reject** sends a rejection email instead. Cancelling from My bookings emails the guest and the admins.)
 
 **C. Shared room (Shared Room Booking Flow)**
 10. Make a second guest, **Male**. Search the same dates: room 101 shows "Shared room, 2 bed(s) available". Book it: the yellow notice "room is already occupied..." appears. Tick it and submit. The first guest gets an email with only first name, gender and dates.
@@ -296,10 +301,10 @@ Keep the **server terminal visible**: while `SMTP_HOST` is empty, every email (c
 13. **Book whole room** is never offered on an occupied room, and an exclusive room is never shown as shared.
 
 **D. Check-in, extension, check-out**
-14. Incharge (or Admin) > **Check-in / out** > the approved booking is under Arriving > **Check in** (only on or after the check-in date). Room status becomes Occupied.
+14. Incharge (or Admin) > **Check-in / out** > the approved booking is under Arriving > **Check in** (only on or after the check-in date). Room status becomes Occupied and the guest gets a check-in email.
 15. Guest > My bookings > **Extend my stay until** > pick a later date > Request. Admin > **Extensions** > Approve. Check-out date moves, "extended 1 time(s)" shows, a new bill row "Stay extension" appears. Reject keeps the original dates.
 16. For an **Exclusive** booking that is checked in: **Extra people arrived** > add a person > they are billed per bed; if no beds are free the page tells you to turn them away.
-17. **Check out** > status Completed. **No-show** on an arriving booking > Cancelled.
+17. **Check out** > the amount to pay shows > choose the **Payment method** (Online payment: mBOB, MPay, DK, TPay, DrukPay, BDBLePay; or Cash) > **Record payment and check out**. Status Completed, the bills show as Paid with that method, and the guest gets a check-out email with the payment summary. **No-show** on an arriving booking > Cancelled, and the guest is emailed.
 
 **E. Meeting hall (Meeting Hall Booking Flow)**
 18. Guest > **Meeting hall** > dates (need not match any room booking) > the fee shows Nu. 5,000 x days + GST > Submit. Admin > **Hall** > Approve > a separate bill appears. Cancelling the hall booking does not touch room bookings.
@@ -309,32 +314,53 @@ Keep the **server terminal visible**: while `SMTP_HOST` is empty, every email (c
 20. **International guest**: first set both International rates on **Rates** (the form also starts offering International to guests). Then enter the guest's details: the booking is approved at once with its bill, and `user_id` is empty in the database.
 21. **Bookings** > a booking > **Change room to** another room: the guest gets an email.
 22. **Rooms**: set a room to Maintenance: it shows "Not open for booking".
-23. **Payments** > **Mark paid**.
+23. **Payments** > choose how the guest paid in **Paid by** > **Mark paid** (used for hall bills, or any bill paid before check-out).
 24. **Users** (Super Admin): set a user Inactive: they can no longer sign in.
 
 ---
 
-## Sending real emails (when you are ready)
+## Email setup (required)
 
-For a Gmail account: turn on 2-Step Verification, create an **App password** (Google Account > Security > App passwords), then in `server/.env`:
+G-Link sends real emails for: account confirmation, new booking (to admins), approval or rejection, cancellation, no-show, check-in, check-out (with the payment summary), room changes, sharing, extensions and hall bookings. Nothing is printed in the terminal any more.
+
+Use **one team Gmail account** (for example `glink.cst@gmail.com`):
+
+1. Sign in to that Gmail > **Google Account** > **Security** > turn on **2-Step Verification**.
+2. Then **Google Account** > search **App passwords** > create one named `G-Link`. Google shows **16 letters**.
+3. In `server/.env` (each teammate's own copy, never committed):
 
 ```
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_SECURE=true
-SMTP_USER=yourteam@gmail.com
-SMTP_PASS=the 16-letter app password
-MAIL_FROM="G-Link Guest House <yourteam@gmail.com>"
+SMTP_USER=glink.cst@gmail.com
+SMTP_PASS=abcdefghijklmnop
+MAIL_FROM="G-Link Guest House <glink.cst@gmail.com>"
+CLIENT_URL=http://localhost:5173
 ```
 
-Restart the server. Confirmation links now point at `CLIENT_URL`, so change that when the site is deployed.
+4. Check it: `npm run test-email -- your-own-email@gmail.com` must say `Sent.` and the email must arrive.
+5. Restart the server (`npm run dev`). It prints `Email ready: sending as glink.cst@gmail.com`.
+
+`SMTP_PASS` is the App password **without spaces**, not the normal Gmail password. Confirmation links open `CLIENT_URL`, so change it to the real website address when the site is deployed.
+
+## Pictures (rooms, hall, floor maps)
+
+The site shows a dashed **Photo needed** / **Map needed** box wherever a picture is missing, with what to photograph and the file name. **21 pictures** are needed: 3 of the guest house, 2 per room (12), 3 of the meeting hall, a floor plan for each of the 2 floors, and 1 campus map. The full list is in `client/public/images/README.md`. Save each file with the exact name shown and it appears without any code change.
+
+## Updating a laptop that already has the project
+
+After pulling these changes:
+1. In Workbench run `database/updates/01_add_payment_method.sql` once (or `DROP DATABASE g_link;` and run `all_in_one.sql` again).
+2. Add the email settings to your own `server/.env` (see **Email setup**).
+3. `cd server` > `npm run check-db` > `npm run dev`, and `cd client` > `npm run dev`.
 
 ---
 
 ## Decisions made while building (check these with your documents)
 
 1. **Table names are lowercase** (`guest_houses`, `booking_guests` ...). MySQL on Windows turns names lowercase anyway; using lowercase everywhere stops errors when you deploy to Linux.
-2. **Payments has one extra column, `description`** (for example "Room charge", "Stay extension: 2 night(s)"). It is not in the Data Types document. Either add it to the document or delete the column and its uses in `server/src/services/pricing.js` (`insertPayment`).
+2. **Payments has two extra columns**: `description` (for example "Room charge", "Stay extension: 2 night(s)") and `payment_method` (mBOB, MPay, DK, TPay, DrukPay, BDBLePay or Cash; empty until paid). Neither is in the Data Types document yet; add them there.
 3. **Per Bed = 1 bed (the booker). Family/Group = the booker + 1 or 2 more guests**, each on their own bed, each priced by their own category (family of RUB staff = Other national). Exclusive = whole room, 1 occupant.
 4. **"Beds free" counts approved bookings and blocks** (as the System Flow notes say), on the busiest night of the stay. Approval checks again, so two pending requests can never both be approved for the same last bed.
 5. **Sharing:** if a room has any approved bed-level booking for those dates, every occupant must have ticked Allow sharing and all new guests must have the occupant's gender.
@@ -343,6 +369,10 @@ Restart the server. Confirmation links now point at `CLIENT_URL`, so change that
 8. **A bill (payment row) is created when the admin approves**; the guest sees an estimate while booking. Extension and extra-people charges are added as extra rows.
 9. **Limits:** a stay is at most 30 nights per booking or extension; a hall booking at most 14 days. Change `MAX_NIGHTS` in `server/src/services/bookingRequest.js` or the 14 in `hallRules.js`.
 10. **Room status** changes on check-in (Occupied) and check-out (Available); Maintenance is set by the admin and never overwritten.
+11. **Payment method is recorded, not processed.** There is still no online payment inside G-Link. At check-out the incharge chooses how the guest paid, and every unpaid bill of that booking is marked Paid with that method. Hall bills (no check-out) are marked paid on the Payments page.
+12. **Visitors can browse without an account**: rooms, free beds, the meeting hall, prices and the floor map. Booking a room or the hall needs a confirmed account.
+13. **Floors come from the room number**: 1xx is the ground floor, 2xx the first floor (as in the sample rooms). The floor map page groups rooms this way.
+14. **Sign-up fails cleanly if the confirmation email cannot be sent**: the account is not kept, and the person is asked to try again.
 
 ---
 
@@ -355,7 +385,11 @@ Restart the server. Confirmation links now point at `CLIENT_URL`, so change that
 | Website says "Cannot reach the server" | Start the backend: `cd server` then `npm run dev` |
 | `EADDRINUSE: 5000` | The server is already running in another terminal. Close it, or change `PORT` in `.env` (and the proxy in `client/vite.config.js`) |
 | Rollup / `@rollup/rollup-win32-x64-msvc` error | Delete `client/node_modules` and `client/package-lock.json`, run `npm install` again |
-| Cannot sign in: "Confirm your email first" | Copy the confirmation link from the server terminal, or use "Send the confirmation email again" |
+| Cannot sign in: "Confirm your email first" | Open the G-Link email (check Spam), or use "Send the confirmation email again" on the sign in page |
+| Server stops with "Email is not set up" | Fill in `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` in `server/.env` (see **Email setup**) |
+| "Email login failed (Invalid login: 535 ...)" | `SMTP_PASS` must be the 16-letter Gmail **App password** without spaces, and 2-Step Verification must be on |
+| `check-db` says `MISSING payments.payment_method` | Run `database/updates/01_add_payment_method.sql` once |
+| Pictures show "Photo needed" | Expected until the pictures are added; see `client/public/images/README.md` |
 | Cannot book: "complete your profile" | Fill in every profile field (SID is optional) |
 | International option missing | Set both International rates on the Rates page |
 | `mysql` is not recognised in PowerShell | Use MySQL Workbench instead, or add `C:\Program Files\MySQL\MySQL Server 8.0\bin` to PATH |

@@ -23,3 +23,5 @@ npm run dev
 ```
 
 Open http://localhost:5173
+
+The server needs a Gmail account for real emails (see **Email setup** in `SETUP_GUIDE.md`). Pictures still to add are listed in `client/public/images/README.md`.

@@ -77,7 +77,7 @@ SELECT room_number, capacity FROM rooms;
 SELECT * FROM halls;
 ```
 
-You should see 6 rate rows (International rate is NULL), 6 rooms with 3 beds each, and the Meeting Hall (25 seats, 5000.00).
+You should see 4 rate rows (RUB and Non-RUB, per bed and whole room), 6 rooms with 3 beds each, and the Meeting Hall (25 seats, 5000.00) inside guest house 1.
 
 **2.4 Commit and push**
 
@@ -91,7 +91,7 @@ What is in it:
 
 | File | Table (Data Types section) |
 |---|---|
-| `schema/01_users.sql` | 1. Users (email UK, CID UK, gender, SID, role, status, bcrypt password) |
+| `schema/01_users.sql` | 1. Users (email UK, CID UK, gender Male/Female, RUB member, SID = staff ID, department, role, status, bcrypt password) |
 | `schema/02_guest_houses.sql` | 2. Guest_Houses |
 | `schema/03_rooms.sql` | 3. Rooms (3-bedded, capacity = beds) |
 | `schema/04_bookings.sql` | 4. Bookings (booking_type, guest_category, gender, allow_sharing, extension_count, approval and check-in/out fields) |
@@ -237,23 +237,22 @@ From now on keep working in your branch, and bring `main` into it before startin
 | Page | Address | File | Who | Feature from the documents |
 |---|---|---|---|---|
 | Home | `/` | `pages/Home.jsx` | visitors | Guest houses, bed-wise charges |
-| Sign up | `/register` | `pages/auth/Register.jsx` | visitors | Sign up with email ID |
+| Sign up | `/register` | `pages/auth/Register.jsx` | visitors | Sign up with email ID and the same details as the Profile page (shared `components/ProfileFields.jsx`) |
 | Sign in | `/login` | `pages/auth/Login.jsx` | everyone | Sign in with email ID, then "check role" sends each role to its own start page |
 | Email confirmation | `/verify-email` | `pages/auth/VerifyEmail.jsx` | everyone | Accounts verified through their email |
-| Profile | `/profile` | `pages/guest/Profile.jsx` | everyone | Edit profile; completed before the first booking (name, CID, SID, contact, gender, department) |
+| Profile | `/profile` | `pages/guest/Profile.jsx` | everyone | Edit profile: name, phone, CID, gender (Male/Female), **RUB member** switch (then staff ID and department/affiliation); change password |
 | Find a room | `/rooms` | `pages/guest/BrowseRooms.jsx` | **everyone** (sign in to book) | Browse guest houses and rooms with photos, availability by date per bed, bed-wise charge, shared-room label |
-| Floor map | `/floor-map` | `pages/FloorMap.jsx` | **everyone** | Floor plan of each floor with its rooms and tonight's free beds, campus map with the guest house and hall |
+| Floor map | `/floor-map` | `pages/FloorMap.jsx` | **everyone** | Floor plan of each floor with its rooms and tonight's free beds, the meeting hall inside the guest house, campus map showing the guest house |
 | Book a room | `/book/:roomId` | `pages/guest/BookRoom.jsx` | Guest | Exclusive / Per bed / Family-group, rate from guest category, bill + 5% GST, allow-sharing tick box, sharing notice to confirm |
 | My bookings | `/my-bookings` | `pages/guest/MyBookings.jsx` | Guest | Room and hall bookings in separate sections, bills, cancel, request stay extension, who shares my room |
-| Meeting hall | `/hall` | `pages/guest/BookHall.jsx` | **everyone** (sign in to book) | Hall photos and details, free days, Nu. 5,000/day + GST; book the 25-seat hall |
+| Meeting hall | `/hall` | `pages/guest/BookHall.jsx` | **everyone** (sign in to book) | The 25-seat hall inside the guest house: photos, free days, Nu. 5,000/day + GST; book it |
 | Dashboard | `/admin` | `pages/admin/AdminDashboard.jsx` | Admin | What is waiting today |
 | Bookings | `/admin/bookings` | `pages/admin/ManageBookings.jsx` | Admin | Review requests (approve/reject sets approved_by + approval_date), contact details, change rooms for others |
 | Extensions | `/admin/extensions` | `pages/admin/Extensions.jsx` | Admin | Approve stay extensions (beds free check, new check-out, extension count +1, extra nights billed) |
 | Hall | `/admin/halls` | `pages/admin/HallBookings.jsx` | Admin | Manage hall bookings, hall price and status |
-| International guest | `/admin/international` | `pages/admin/InternationalBooking.jsx` | Admin | Book for international guests and record their details |
 | Rooms | `/admin/rooms` | `pages/admin/ManageRooms.jsx` | Admin | Manage guest houses, rooms and room availability |
 | Blocks | `/admin/blocks` | `pages/admin/RoomBlocks.jsx` | Admin | Block rooms/beds for VIP or official guests (no booking made) |
-| Rates | `/admin/rates` | `pages/admin/Rates.jsx` | Admin | Edit rate table (rates, GST); set International rates |
+| Rates | `/admin/rates` | `pages/admin/Rates.jsx` | Admin | Edit rate table (RUB and Non-RUB rates, GST) |
 | Payments | `/admin/payments` | `pages/admin/Payments.jsx` | Admin | Bills, paid / unpaid, and the payment method (mBOB, MPay, DK, TPay, DrukPay, BDBLePay or Cash) |
 | Check-in / out | `/incharge` | `pages/incharge/CheckInOut.jsx` | Incharge (and Admin) | View bookings, check in, check out with the payment method (Completed), no-show (Cancelled), extra people on exclusive booking |
 | Users | `/superadmin/users` | `pages/superadmin/ManageUsers.jsx` | Super Admin | Manage admins, incharges and users (role, active/inactive, new staff accounts, password reset) |
@@ -284,13 +283,13 @@ Use **real email addresses you can open** for every test account (for example yo
 **A. Roles and sign in (Role-Based Access Flow)**
 1. Sign in at `/login` with the Super Admin email/password from `server/.env`. You land on **Users**.
 2. Create an **Admin** and an **Incharge** account there.
-3. Sign out. Go to **Sign up** and create a guest, ideally with an `@rub.edu.bt` email you can open.
+3. Sign out. Go to **Sign up** and create a guest with an email you can open.
 4. Open that inbox, click **Confirm my email** in the G-Link email, then sign in.
-5. You are sent to **Profile** first. Fill it in (pick **Male**). Save: you go to **Find a room**.
+5. Sign up already asks for the profile details (pick **Male**; turn on **RUB member** and fill in staff ID and department to get the RUB rate), so after signing in you go straight to **Find a room**. **Profile** shows the same fields to change later.
 
 **B. Room booking (Booking Process Flow)**
 6. Pick dates and **Check availability**. Every room shows 3 free beds.
-7. On room 101 click **Book beds** > keep **One bed** > fill purpose > tick **Allow sharing** > **Check availability and price**. The bill shows rate x nights, GST 5% as its own line, and the total. The rate category is RUB staff only for a RUB email.
+7. On room 101 click **Book beds** > keep **One bed** > fill purpose > tick **Allow sharing** > **Check availability and price**. The bill shows rate x nights, GST 5% as its own line, and the total. The rate (RUB or Non-RUB) comes from the RUB member switch on your profile; there is no rate box on the booking form.
 8. **Submit booking**. The admins get an email. My bookings shows **Pending**.
 9. Sign in as the Admin > **Bookings** > click the row > **Approve**. The guest gets an approval email with the amount, and **Payments** has a new unpaid bill. (**Reject** sends a rejection email instead. Cancelling from My bookings emails the guest and the admins.)
 
@@ -311,11 +310,10 @@ Use **real email addresses you can open** for every test account (for example yo
 
 **F. Admin tools**
 19. **Blocks**: block 3 beds of room 102 for VIP/official reservation. Guests now see room 102 as Full for those dates. No booking is created.
-20. **International guest**: first set both International rates on **Rates** (the form also starts offering International to guests). Then enter the guest's details: the booking is approved at once with its bill, and `user_id` is empty in the database.
-21. **Bookings** > a booking > **Change room to** another room: the guest gets an email.
-22. **Rooms**: set a room to Maintenance: it shows "Not open for booking".
-23. **Payments** > choose how the guest paid in **Paid by** > **Mark paid** (used for hall bills, or any bill paid before check-out).
-24. **Users** (Super Admin): set a user Inactive: they can no longer sign in.
+20. **Bookings** > a booking > **Change room to** another room: the guest gets an email.
+21. **Rooms**: set a room to Maintenance: it shows "Not open for booking".
+22. **Payments** > choose how the guest paid in **Paid by** > **Mark paid** (used for hall bills, or any bill paid before check-out).
+23. **Users** (Super Admin): set a user Inactive: they can no longer sign in.
 
 ---
 
@@ -351,7 +349,7 @@ The site shows a dashed **Photo needed** / **Map needed** box wherever a picture
 ## Updating a laptop that already has the project
 
 After pulling these changes:
-1. In Workbench run `database/updates/01_add_payment_method.sql` once (or `DROP DATABASE g_link;` and run `all_in_one.sql` again).
+1. In Workbench run the files in `database/updates/` once each, in order (`01_...`, then `02_...`), or `DROP DATABASE g_link;` and run `all_in_one.sql` again (easier if you only have test data).
 2. Add the email settings to your own `server/.env` (see **Email setup**).
 3. `cd server` > `npm run check-db` > `npm run dev`, and `cd client` > `npm run dev`.
 
@@ -361,18 +359,20 @@ After pulling these changes:
 
 1. **Table names are lowercase** (`guest_houses`, `booking_guests` ...). MySQL on Windows turns names lowercase anyway; using lowercase everywhere stops errors when you deploy to Linux.
 2. **Payments has two extra columns**: `description` (for example "Room charge", "Stay extension: 2 night(s)") and `payment_method` (mBOB, MPay, DK, TPay, DrukPay, BDBLePay or Cash; empty until paid). Neither is in the Data Types document yet; add them there.
-3. **Per Bed = 1 bed (the booker). Family/Group = the booker + 1 or 2 more guests**, each on their own bed, each priced by their own category (family of RUB staff = Other national). Exclusive = whole room, 1 occupant.
+3. **Per Bed = 1 bed (the booker). Family/Group = the booker + 1 or 2 more guests**, each on their own bed, each priced by their own category (RUB member with staff ID, or Non-RUB). Exclusive = whole room, 1 occupant.
 4. **"Beds free" counts approved bookings and blocks** (as the System Flow notes say), on the busiest night of the stay. Approval checks again, so two pending requests can never both be approved for the same last bed.
 5. **Sharing:** if a room has any approved bed-level booking for those dates, every occupant must have ticked Allow sharing and all new guests must have the occupant's gender.
 6. **Room block end date works like a check-out date** (block 1 to 3 Nov = nights of 1 and 2 Nov). **Hall dates are both used days** (1 to 2 Nov = 2 days).
-7. **The RUB staff rate is offered only to accounts with an official RUB email** (domains in `RUB_EMAIL_DOMAINS` in `.env`). Every account confirms its email before signing in.
+7. **Only two kinds of guest: RUB (Royal University of Bhutan) members and Non-RUB.** No International guests. The **RUB member** switch on the profile sets the rate; RUB members must give a staff ID and department/affiliation, which the admin sees when approving. The category is saved on each booking, so changing the profile later does not change existing bills. Every account confirms its email before signing in.
 8. **A bill (payment row) is created when the admin approves**; the guest sees an estimate while booking. Extension and extra-people charges are added as extra rows.
 9. **Limits:** a stay is at most 30 nights per booking or extension; a hall booking at most 14 days. Change `MAX_NIGHTS` in `server/src/services/bookingRequest.js` or the 14 in `hallRules.js`.
 10. **Room status** changes on check-in (Occupied) and check-out (Available); Maintenance is set by the admin and never overwritten.
 11. **Payment method is recorded, not processed.** There is still no online payment inside G-Link. At check-out the incharge chooses how the guest paid, and every unpaid bill of that booking is marked Paid with that method. Hall bills (no check-out) are marked paid on the Payments page.
 12. **Visitors can browse without an account**: rooms, free beds, the meeting hall, prices and the floor map. Booking a room or the hall needs a confirmed account.
-13. **Floors come from the room number**: 1xx is the ground floor, 2xx the first floor (as in the sample rooms). The floor map page groups rooms this way.
-14. **Sign-up fails cleanly if the confirmation email cannot be sent**: the account is not kept, and the person is asked to try again.
+13. **The meeting hall is part of the guest house** (`halls.guesthouse_id`): it is shown with its guest house, and it cannot be booked while the guest house is closed.
+14. **Gender is Male or Female** (used for same-gender room sharing).
+15. **Floors come from the room number**: 1xx is the ground floor, 2xx the first floor (as in the sample rooms). The floor map page groups rooms this way.
+16. **Sign-up fails cleanly if the confirmation email cannot be sent**: the account is not kept, and the person is asked to try again.
 
 ---
 
@@ -390,6 +390,6 @@ After pulling these changes:
 | "Email login failed (Invalid login: 535 ...)" | `SMTP_PASS` must be the 16-letter Gmail **App password** without spaces, and 2-Step Verification must be on |
 | `check-db` says `MISSING payments.payment_method` | Run `database/updates/01_add_payment_method.sql` once |
 | Pictures show "Photo needed" | Expected until the pictures are added; see `client/public/images/README.md` |
-| Cannot book: "complete your profile" | Fill in every profile field (SID is optional) |
-| International option missing | Set both International rates on the Rates page |
+| Cannot book: "complete your profile" | Fill in every profile field (RUB members also need staff ID and department) |
+| `check-db` OK but sign-up fails with "Unknown column 'is_rub_member'" | Run `database/updates/02_rub_non_rub_and_hall_in_guest_house.sql` once |
 | `mysql` is not recognised in PowerShell | Use MySQL Workbench instead, or add `C:\Program Files\MySQL\MySQL Server 8.0\bin` to PATH |

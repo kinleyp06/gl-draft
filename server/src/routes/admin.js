@@ -504,13 +504,18 @@ router.get('/payments', asyncHandler(async (req, res) => {
   res.json({ payments: rows });
 }));
 
+// The admin records how the guest paid: an online payment (mBOB, MPay, DK, TPay, DrukPay, BDBLePay) or Cash.
 router.post('/payments/:id/paid', asyncHandler(async (req, res) => {
-  await pool.query("UPDATE payments SET payment_status = 'Paid', paid_at = NOW(), recorded_by = ? WHERE payment_id = ?", [req.user.user_id, req.params.id]);
-  res.json({ message: 'Marked as paid.' });
+  v.oneOf(req.body.payment_method, v.PAYMENT_METHODS, 'Payment method');
+  await pool.query(
+    "UPDATE payments SET payment_status = 'Paid', paid_at = NOW(), payment_method = ?, recorded_by = ? WHERE payment_id = ?",
+    [req.body.payment_method, req.user.user_id, req.params.id]
+  );
+  res.json({ message: `Marked as paid (${req.body.payment_method}).` });
 }));
 
 router.post('/payments/:id/unpaid', asyncHandler(async (req, res) => {
-  await pool.query("UPDATE payments SET payment_status = 'Unpaid', paid_at = NULL, recorded_by = ? WHERE payment_id = ?", [req.user.user_id, req.params.id]);
+  await pool.query("UPDATE payments SET payment_status = 'Unpaid', paid_at = NULL, payment_method = NULL, recorded_by = ? WHERE payment_id = ?", [req.user.user_id, req.params.id]);
   res.json({ message: 'Marked as unpaid.' });
 }));
 

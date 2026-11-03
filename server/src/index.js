@@ -4,6 +4,7 @@ const cors = require('cors');
 const env = require('./config/env');
 const { pool } = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
+const { checkEmailSetup } = require('./services/email');
 
 const app = express();
 app.use(cors({ origin: env.clientUrl }));
@@ -30,7 +31,10 @@ app.use('/api', require('./routes/catalog'));
 app.use('/api', (req, res) => res.status(404).json({ message: `No API route for ${req.method} ${req.originalUrl}` }));
 app.use(errorHandler);
 
-app.listen(env.port, () => {
-  console.log(`G-Link API running on http://localhost:${env.port}`);
-  console.log(`Health check: http://localhost:${env.port}/api/health`);
+// Email must work before the site opens: sign-up confirmation and every booking notice go by email.
+checkEmailSetup().then(() => {
+  app.listen(env.port, () => {
+    console.log(`G-Link API running on http://localhost:${env.port}`);
+    console.log(`Health check: http://localhost:${env.port}/api/health`);
+  });
 });

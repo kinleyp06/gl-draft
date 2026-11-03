@@ -8,6 +8,7 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 const { refreshRoomStatus } = require('../services/availability');
 const { cleanGuest } = require('../services/bookingRequest');
 const { priceRoom, insertPayment } = require('../services/pricing');
+const notify = require('../services/notify');
 
 const router = express.Router();
 router.use(requireAuth, requireRole('Incharge', 'Admin'));
@@ -16,7 +17,9 @@ const BOOKING_SELECT = `
   SELECT b.*, r.room_number, r.capacity, g.guesthouse_name,
          COALESCE(CONCAT(u.first_name,' ',u.last_name),
                   (SELECT full_name FROM booking_guests bg WHERE bg.booking_id = b.booking_id ORDER BY guest_id LIMIT 1)) AS guest_name,
-         u.phone_number AS guest_phone
+         u.phone_number AS guest_phone,
+         (SELECT COALESCE(SUM(p.total_amount), 0) FROM payments p
+           WHERE p.booking_id = b.booking_id AND p.payment_status = 'Unpaid') AS amount_due
     FROM bookings b JOIN rooms r ON r.room_id = b.room_id
     JOIN guest_houses g ON g.guesthouse_id = r.guesthouse_id
     LEFT JOIN users u ON u.user_id = b.user_id`;
@@ -50,15 +53,17 @@ async function loadForUpdate(conn, id) {
 }
 
 router.post('/bookings/:id/check-in', asyncHandler(async (req, res) => {
-  await withTransaction(async (conn) => {
+  const booked = await withTransaction(async (conn) => {
     const b = await loadForUpdate(conn, req.params.id);
     if (b.booking_status !== 'Approved') throw new HttpError(400, 'Only approved bookings can be checked in.');
     if (b.checked_in_at) throw new HttpError(400, 'This guest is already checked in.');
     if (b.check_in_date > today()) throw new HttpError(400, `Check-in opens on ${b.check_in_date}.`);
     await conn.query('UPDATE bookings SET checked_in_at = NOW(), checked_by = ? WHERE booking_id = ?', [req.user.user_id, b.booking_id]);
     await refreshRoomStatus(conn, b.room_id);
+    return b;
   });
-  res.json({ message: 'Guest checked in.' });
+  await notify.checkedIn(booked);
+  res.json({ message: 'Guest checked in. They have been emailed.' });
 }));
 
 // Extra people arrived on an exclusive booking: charge them per bed, or turn them away if no beds are free.
@@ -94,28 +99,50 @@ router.post('/bookings/:id/extra-guests', asyncHandler(async (req, res) => {
   res.json({ message: 'Extra people added and billed per bed.', bill: out });
 }));
 
+// Check-out settles the stay: every unpaid bill on the booking is marked paid with the
+// payment method the guest used (an online payment app or Cash), then the guest gets a receipt by email.
 router.post('/bookings/:id/check-out', asyncHandler(async (req, res) => {
-  await withTransaction(async (conn) => {
+  const out = await withTransaction(async (conn) => {
     const b = await loadForUpdate(conn, req.params.id);
     if (!b.checked_in_at || b.checked_out_at) throw new HttpError(400, 'This guest is not checked in.');
+    const [[due]] = await conn.query(
+      "SELECT COUNT(*) AS n FROM payments WHERE booking_id = ? AND payment_status = 'Unpaid'", [b.booking_id]
+    );
+    if (due.n > 0) {
+      v.oneOf(req.body.payment_method, v.PAYMENT_METHODS, 'Payment method');
+      await conn.query(
+        `UPDATE payments SET payment_status = 'Paid', paid_at = NOW(), payment_method = ?, recorded_by = ?
+          WHERE booking_id = ? AND payment_status = 'Unpaid'`,
+        [req.body.payment_method, req.user.user_id, b.booking_id]
+      );
+    }
     await conn.query(
       "UPDATE bookings SET checked_out_at = NOW(), checked_by = ?, booking_status = 'Completed' WHERE booking_id = ?",
       [req.user.user_id, b.booking_id]
     );
     await conn.query("UPDATE stay_extensions SET extension_status = 'Rejected', reviewed_at = NOW() WHERE booking_id = ? AND extension_status = 'Pending'", [b.booking_id]);
     await refreshRoomStatus(conn, b.room_id);
+    const [payments] = await conn.query('SELECT * FROM payments WHERE booking_id = ? ORDER BY payment_id', [b.booking_id]);
+    return { b, payments, paidNow: due.n > 0 };
   });
-  res.json({ message: 'Guest checked out. Booking completed.' });
+  await notify.checkedOut(out.b, out.payments);
+  res.json({
+    message: out.paidNow
+      ? `Guest checked out and paid by ${req.body.payment_method}. Booking completed; a receipt was emailed.`
+      : 'Guest checked out. Booking completed; a receipt was emailed.',
+  });
 }));
 
 // Guest never arrived.
 router.post('/bookings/:id/no-show', asyncHandler(async (req, res) => {
-  await withTransaction(async (conn) => {
+  const missed = await withTransaction(async (conn) => {
     const b = await loadForUpdate(conn, req.params.id);
     if (b.booking_status !== 'Approved' || b.checked_in_at) throw new HttpError(400, 'Only approved bookings that never checked in can be marked as no-show.');
     await conn.query("UPDATE bookings SET booking_status = 'Cancelled', checked_by = ? WHERE booking_id = ?", [req.user.user_id, b.booking_id]);
+    return b;
   });
-  res.json({ message: 'Marked as no-show. Booking cancelled.' });
+  await notify.bookingCancelled(missed, 'no-show');
+  res.json({ message: 'Marked as no-show. Booking cancelled and the guest emailed.' });
 }));
 
 module.exports = router;

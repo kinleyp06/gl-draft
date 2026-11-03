@@ -23,7 +23,8 @@ const env = {
     secure: String(process.env.SMTP_SECURE) !== 'false',
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
-    from: process.env.MAIL_FROM || 'G-Link <no-reply@glink.local>',
+    // Gmail only sends "from" the signed-in account, so this defaults to SMTP_USER.
+    from: process.env.MAIL_FROM || `G-Link Guest House <${process.env.SMTP_USER || ''}>`,
   },
 };
 

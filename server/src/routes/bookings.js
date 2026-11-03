@@ -157,8 +157,8 @@ router.post('/:id/cancel', asyncHandler(async (req, res) => {
   }
   await pool.query("UPDATE bookings SET booking_status = 'Cancelled' WHERE booking_id = ?", [b.booking_id]);
   await pool.query("UPDATE stay_extensions SET extension_status = 'Rejected', reviewed_at = NOW() WHERE booking_id = ? AND extension_status = 'Pending'", [b.booking_id]);
-  await notify.bookingCancelled(b);
-  res.json({ message: 'Booking cancelled.' });
+  await notify.bookingCancelled(b, 'guest');
+  res.json({ message: 'Booking cancelled. A confirmation email is on its way.' });
 }));
 
 // Request a stay extension (new check-out date). Admin reviews it.

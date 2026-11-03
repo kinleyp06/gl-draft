@@ -3,7 +3,8 @@
 ```
 npm install
 copy .env.example .env      (PowerShell: Copy-Item .env.example .env) then fill in DB_PASSWORD and JWT_SECRET
-npm run check-db             checks MySQL connection and the 12 tables
+npm run check-db             checks MySQL connection, the 12 tables and the payment_method column
+npm run test-email -- you@example.com   sends one test email (checks the Gmail settings in .env)
 npm run create-super-admin   creates the ICT unit Super Admin from .env
 npm run dev                  starts the API on http://localhost:5000
 ```
@@ -19,10 +20,10 @@ npm run dev                  starts the API on http://localhost:5000
 | `src/services/pricing.js` | Bills: rate x beds x nights + GST; hall: price per day x days + GST |
 | `src/services/bookingRequest.js` | Reads and checks the room booking form |
 | `src/services/hallRules.js` | Hall dates and overlap check |
-| `src/services/notify.js`, `email.js` | Every email (prints to the terminal if SMTP is not set) |
+| `src/services/notify.js`, `email.js` | Every email, sent through the Gmail account in `.env` (required: the server will not start without it) |
 | `src/services/users.js` | Profile complete check, which rate categories a user may pick |
 | `src/routes/*.js` | The API endpoints (list below) |
-| `scripts/` | `createSuperAdmin.js`, `checkDb.js` |
+| `scripts/` | `createSuperAdmin.js`, `checkDb.js`, `testEmail.js` |
 
 ## API endpoints
 | Method and path | Who | What |
@@ -35,7 +36,7 @@ npm run dev                  starts the API on http://localhost:5000
 | GET, PUT /api/profile | signed in | View / edit profile |
 | PUT /api/profile/password | signed in | Change password |
 | GET /api/guesthouses, /api/rates | anyone | Browse guest houses and rates |
-| GET /api/rooms/availability | anyone | Free beds per room for dates |
+| GET /api/rooms/availability | anyone (no sign-in) | Free beds per room for dates |
 | GET /api/rooms/:id | anyone | One room |
 | GET /api/bookings/options | signed in | Categories the user may choose |
 | POST /api/bookings/quote | signed in | Availability + bill before booking |

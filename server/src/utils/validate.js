@@ -5,6 +5,9 @@ const { isValidDate } = require('./dates');
 const GENDERS = ['Male', 'Female', 'Other'];
 const CATEGORIES = ['RUB staff', 'Other national', 'International'];
 const BOOKING_TYPES = ['Exclusive', 'Per Bed', 'Family/Group'];
+// How a bill was paid. No money moves through G-Link; staff record the method the guest used.
+const ONLINE_PAYMENTS = ['mBOB', 'MPay', 'DK', 'TPay', 'DrukPay', 'BDBLePay'];
+const PAYMENT_METHODS = [...ONLINE_PAYMENTS, 'Cash'];
 
 function required(body, fields) {
   const missing = fields.filter((f) => body[f] === undefined || body[f] === null || String(body[f]).trim() === '');
@@ -37,4 +40,4 @@ function phone(value, label = 'Phone number') {
   if (value && !/^\d{8,11}$/.test(String(value))) throw new HttpError(400, `${label} must be 8 to 11 digits`);
 }
 
-module.exports = { GENDERS, CATEGORIES, BOOKING_TYPES, required, oneOf, date, maxLen, isEmail, positiveInt, phone };
+module.exports = { GENDERS, CATEGORIES, BOOKING_TYPES, ONLINE_PAYMENTS, PAYMENT_METHODS, required, oneOf, date, maxLen, isEmail, positiveInt, phone };

@@ -70,7 +70,8 @@ router.post('/hall-bookings/:id/cancel', requireAuth, asyncHandler(async (req, r
   if (!hb) throw new HttpError(404, 'Hall booking not found.');
   if (!['Pending', 'Approved'].includes(hb.booking_status)) throw new HttpError(400, 'Only pending or approved hall bookings can be cancelled.');
   await pool.query("UPDATE hall_bookings SET booking_status = 'Cancelled' WHERE hall_booking_id = ?", [hb.hall_booking_id]);
-  res.json({ message: 'Hall booking cancelled.' });
+  await notify.hallCancelled(hb);
+  res.json({ message: 'Hall booking cancelled. A confirmation email is on its way.' });
 }));
 
 module.exports = router;

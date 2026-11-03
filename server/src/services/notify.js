@@ -1,4 +1,5 @@
-// Every email the system sends (new bookings, outcomes, sharing, extensions, halls).
+// Every email the system sends: account confirmation, new bookings, approval or rejection,
+// cancellations, check-in, check-out (with what was paid and how), sharing, extensions and halls.
 const { pool } = require('../config/db');
 const env = require('../config/env');
 const { sendMail } = require('./email');
@@ -28,7 +29,8 @@ module.exports = {
     return sendMail({
       to: user.email,
       subject: 'G-Link: confirm your email',
-      text: `Hello ${user.first_name},\n\nConfirm your email to activate your G-Link account:\n${link}\n\nThis link works for 24 hours.`,
+      text: `Hello ${user.first_name},\n\nConfirm your email to activate your G-Link account:\n${link}\n\nThis link works for 24 hours. If you did not sign up, ignore this email.`,
+      button: { url: link, label: 'Confirm my email' },
     });
   },
 
@@ -51,11 +53,44 @@ module.exports = {
     });
   },
 
-  async bookingCancelled(booking) {
-    return sendMail({
+  // by: 'guest' (cancelled from My bookings) or 'no-show' (the guest never arrived).
+  async bookingCancelled(booking, by = 'guest') {
+    const why = by === 'no-show' ? 'was marked as a no-show (the guest did not arrive) and cancelled' : 'was cancelled by the guest';
+    await sendMail({
       to: await adminEmails(),
       subject: `G-Link: booking #${booking.booking_id} was cancelled`,
-      text: `Booking #${booking.booking_id} (${stayLine(booking)}) was cancelled by the guest.`,
+      text: `Booking #${booking.booking_id} (${stayLine(booking)}) ${why}.`,
+    });
+    const u = await bookerEmail(booking);
+    if (!u) return false;
+    const guestText = by === 'no-show'
+      ? `You did not arrive for booking #${booking.booking_id} (${stayLine(booking)}), so it has been cancelled and the bed(s) released.\n\nIf this is a mistake, contact the guest house office.`
+      : `Your booking #${booking.booking_id} (${stayLine(booking)}) has been cancelled as you asked.`;
+    return sendMail({ to: u.email, subject: `G-Link: your booking #${booking.booking_id} was cancelled`, text: `Hello ${u.first_name},\n\n${guestText}` });
+  },
+
+  async checkedIn(booking) {
+    const u = await bookerEmail(booking);
+    if (!u) return false;
+    return sendMail({
+      to: u.email,
+      subject: `G-Link: you are checked in (booking #${booking.booking_id})`,
+      text: `Hello ${u.first_name},\n\nWelcome! You are checked in to room ${booking.room_number}.\nCheck-out date: ${booking.check_out_date}\n\nTo stay longer, request an extension from My bookings before your check-out date.`,
+    });
+  },
+
+  // payments: the bills settled at check-out, each with its payment method.
+  async checkedOut(booking, payments) {
+    const u = await bookerEmail(booking);
+    if (!u) return false;
+    const lines = payments.length
+      ? payments.map((p) => `- ${p.description || 'Bill'} #${p.payment_id}: ${money(p.total_amount)}, ${p.payment_status}${p.payment_method ? ` by ${p.payment_method}` : ''}`).join('\n')
+      : '- No bills on this booking.';
+    const total = payments.reduce((sum, p) => sum + Number(p.total_amount), 0);
+    return sendMail({
+      to: u.email,
+      subject: `G-Link: you are checked out (booking #${booking.booking_id})`,
+      text: `Hello ${u.first_name},\n\nYou checked out of room ${booking.room_number}. Your booking #${booking.booking_id} is complete.\n\nPayment summary:\n${lines}\nTotal: ${money(total)} (incl. GST)\n\nThank you for staying at the CST guest house.`,
     });
   },
 
@@ -113,6 +148,22 @@ module.exports = {
       to: rows[0].email,
       subject: `G-Link: your hall booking #${hb.hall_booking_id} was ${hb.booking_status.toLowerCase()}`,
       text: `Hello ${rows[0].first_name},\n\nYour hall booking #${hb.hall_booking_id} (${hb.start_date} to ${hb.end_date}) is now ${hb.booking_status}.${billText}`,
+    });
+  },
+
+  async hallCancelled(hb) {
+    const [rows] = await pool.query('SELECT email, first_name FROM users WHERE user_id = ?', [hb.user_id]);
+    const when = `${hb.start_date} to ${hb.end_date}`;
+    await sendMail({
+      to: await adminEmails(),
+      subject: `G-Link: hall booking #${hb.hall_booking_id} was cancelled`,
+      text: `Hall booking #${hb.hall_booking_id} (${when}) was cancelled by the guest.`,
+    });
+    if (!rows[0]) return false;
+    return sendMail({
+      to: rows[0].email,
+      subject: `G-Link: your hall booking #${hb.hall_booking_id} was cancelled`,
+      text: `Hello ${rows[0].first_name},\n\nYour meeting hall booking #${hb.hall_booking_id} (${when}) has been cancelled as you asked. Your room bookings are not affected.`,
     });
   },
 

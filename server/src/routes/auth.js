@@ -36,8 +36,12 @@ router.post('/register', asyncHandler(async (req, res) => {
     [first_name.trim(), last_name.trim(), email, hash]
   );
   const user = { user_id: result.insertId, first_name, email };
-  await notify.verifyEmail(user, verifyToken(user));
-  res.status(201).json({ message: 'Account created. Check your email for the link to confirm it.' });
+  if (!(await notify.verifyEmail(user, verifyToken(user)))) {
+    // Without the email the account could never be confirmed, so undo it and let them try again.
+    await pool.query('DELETE FROM users WHERE user_id = ?', [user.user_id]);
+    throw new HttpError(502, 'We could not send the confirmation email. Check the address and try again in a few minutes.');
+  }
+  res.status(201).json({ message: `Account created. We sent a confirmation link to ${email}. Open it to activate your account (check Spam too).` });
 }));
 
 router.post('/verify-email', asyncHandler(async (req, res) => {
@@ -56,7 +60,9 @@ router.post('/resend-verification', asyncHandler(async (req, res) => {
   const email = String(req.body.email || '').trim().toLowerCase();
   const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
   const user = rows[0];
-  if (user && !user.email_verified) await notify.verifyEmail(user, verifyToken(user));
+  if (user && !user.email_verified && !(await notify.verifyEmail(user, verifyToken(user)))) {
+    throw new HttpError(502, 'We could not send the email right now. Try again in a few minutes.');
+  }
   // Same answer either way, so nobody can test which emails exist.
   res.json({ message: 'If that account needs confirming, a new link has been sent.' });
 }));

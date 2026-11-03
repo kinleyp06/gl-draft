@@ -1,4 +1,4 @@
-// Quick check that the server can reach MySQL and all 12 tables exist:  npm run check-db
+// Quick check that the server can reach MySQL, all 12 tables exist, and the latest columns are there:  npm run check-db
 require('../src/config/env');
 const { pool } = require('../src/config/db');
 
@@ -9,6 +9,11 @@ const TABLES = ['users', 'guest_houses', 'rooms', 'bookings', 'booking_guests', 
   const [rows] = await pool.query('SHOW TABLES');
   const found = rows.map((r) => Object.values(r)[0].toLowerCase());
   for (const t of TABLES) console.log(`${found.includes(t) ? 'OK     ' : 'MISSING'} ${t}`);
+  if (found.includes('payments')) {
+    const [cols] = await pool.query("SHOW COLUMNS FROM payments LIKE 'payment_method'");
+    if (cols.length) console.log('OK      payments.payment_method');
+    else console.log('MISSING payments.payment_method  -> run database/updates/01_add_payment_method.sql once');
+  }
   await pool.end();
 })().catch((err) => {
   console.error('Cannot connect to MySQL:', err.message);

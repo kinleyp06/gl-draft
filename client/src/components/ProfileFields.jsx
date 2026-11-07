@@ -1,7 +1,7 @@
 // The profile form, shared by Sign up and the Profile page so both ask the same things in the same layout.
 // Only two kinds of guest: RUB (Royal University of Bhutan) members and Non-RUB. The "RUB member"
 // switch sets the guest's rate; when it is on, the staff ID and department / affiliation are asked for.
-import { Field } from './ui.jsx';
+import { Field, Notice, STAFF_ID_NOTE } from './ui.jsx';
 
 export const emptyProfile = {
   first_name: '', last_name: '', phone_number: '', citizenship_id: '', gender: '',
@@ -51,10 +51,13 @@ export default function ProfileFields({ form, setForm }) {
       </label>
 
       {form.is_rub_member && (
-        <div className="form-grid">
-          <Field label="Staff ID"><input required maxLength={20} value={form.sid} onChange={set('sid')} /></Field>
-          <Field label="Department / Affiliation"><input required maxLength={50} value={form.department} onChange={set('department')} /></Field>
-        </div>
+        <>
+          <div className="form-grid">
+            <Field label="Staff ID"><input required maxLength={20} value={form.sid} onChange={set('sid')} /></Field>
+            <Field label="Department / Affiliation"><input required maxLength={50} value={form.department} onChange={set('department')} /></Field>
+          </div>
+          <Notice type="info"><strong>Please note:</strong> {STAFF_ID_NOTE} Please bring your staff ID.</Notice>
+        </>
       )}
     </>
   );

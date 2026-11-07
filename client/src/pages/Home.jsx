@@ -96,7 +96,7 @@ export default function Home() {
           </table>
         </div>
         <p className="muted small" style={{ marginTop: '0.5rem' }}>
-          RUB = Royal University of Bhutan staff; everyone else pays the Non-RUB rate. 5% GST is added to every bill.
+          RUB = Royal University of Bhutan staff; everyone else pays the Non-RUB rate. Staff ID will be verified during check-in and check-out for RUB members. 5% GST is added to every bill.
           The meeting hall inside the guest house is {hall ? money(hall.price_per_day) : 'Nu. 5,000.00'} per day plus GST.
         </p>
         <div className="grid" style={{ marginTop: '1rem' }}>

@@ -25,6 +25,9 @@ export function Field({ label, children, hint, className = '' }) {
   );
 }
 
+// Shown wherever someone claims the RUB rate, so nobody poses as a RUB member.
+export const STAFF_ID_NOTE = 'Staff ID will be verified during check-in and check-out for RUB members.';
+
 // How a bill was paid. G-Link takes no money itself: staff choose what the guest used.
 export const ONLINE_PAYMENTS = ['mBOB', 'MPay', 'DK', 'TPay', 'DrukPay', 'BDBLePay'];
 

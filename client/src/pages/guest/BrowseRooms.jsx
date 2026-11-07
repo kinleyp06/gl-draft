@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, qs } from '../../api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { BedPips, Empty, Field, KeyTag, Notice, addDaysStr, money, todayStr, useLoad } from '../../components/ui.jsx';
+import { BedPips, Empty, Field, KeyTag, Notice, STAFF_ID_NOTE, addDaysStr, money, todayStr, useLoad } from '../../components/ui.jsx';
 import { PhotoSwitcher } from '../../components/Photo.jsx';
 import { roomPhotos } from '../../photos.js';
 
@@ -76,6 +76,7 @@ export default function BrowseRooms() {
             <div key={c}>{c === 'RUB' ? 'RUB member' : 'Non-RUB'}: {money(rate(c, 'Per Bed'))} per bed, {money(rate(c, 'Exclusive Room'))} whole room</div>
           ))}
         </div>
+        <p className="small muted" style={{ margin: '0.5rem 0 0' }}>{STAFF_ID_NOTE}</p>
       </div>
 
       <Notice type="error">{error}</Notice>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useAuth } from '../../context/AuthContext.jsx';
-import { BillBox, Field, KeyTag, Notice, addDaysStr, todayStr, useLoad } from '../../components/ui.jsx';
+import { BillBox, Field, KeyTag, Notice, STAFF_ID_NOTE, addDaysStr, todayStr, useLoad } from '../../components/ui.jsx';
 
 const TYPES = [
   ['Per Bed', 'One bed', 'You take one bed. Other beds may be used by other guests.'],
@@ -131,6 +131,7 @@ export default function BookRoom() {
           </div>
           <p className="small muted" style={{ margin: 0 }}>
             You pay the <strong className="highlight">{options.category}</strong> rate, from your profile. <Link to="/profile">Change on your profile</Link>.
+            {(options.category === 'RUB' || form.additional_guests.some((g) => g.guest_category === 'RUB')) && <><br /><strong>{STAFF_ID_NOTE}</strong></>}
           </p>
           <Field label="Purpose of visit">
             <input required maxLength={255} value={form.purpose_of_visit} onChange={(e) => update({ purpose_of_visit: e.target.value })} />
@@ -155,7 +156,7 @@ export default function BookRoom() {
                       <option value="">Choose</option><option>Male</option><option>Female</option>
                     </select>
                   </Field>
-                  <Field label="RUB member?" hint="RUB members need their staff ID">
+                  <Field label="RUB member?" hint="RUB members need their staff ID; it is checked at check-in and check-out">
                     <select value={g.guest_category} onChange={(e) => setGuest(i, { guest_category: e.target.value })}>
                       {options.guest_categories.map((c) => <option key={c} value={c}>{c === 'RUB' ? 'RUB member' : 'Non-RUB'}</option>)}
                     </select>

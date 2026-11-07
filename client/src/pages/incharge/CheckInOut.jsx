@@ -87,7 +87,17 @@ function BookingTable({ rows, children }) {
           {rows.map((b) => (
             <tr key={b.booking_id}>
               <td>{b.booking_id}</td>
-              <td>{b.guest_name}<div className="small muted">{b.guest_phone}</div></td>
+              <td>
+                {b.guest_name}<div className="small muted">{b.guest_phone}</div>
+                {/* RUB rate: check the staff ID card at check-in and check-out. */}
+                {(b.guest_category === 'RUB' || b.rub_guests) && (
+                  <div className="verify-id">
+                    <span className="vip-tag">RUB</span> Verify staff ID
+                    {b.guest_category === 'RUB' && <>: <strong>{b.guest_staff_id || 'not given'}</strong></>}
+                    {b.rub_guests && <div className="small">Other RUB guests: {b.rub_guests}</div>}
+                  </div>
+                )}
+              </td>
               <td>{b.room_number}<div className="small muted">{b.guesthouse_name}</div></td>
               <td>{b.check_in_date} to {b.check_out_date}</td>
               <td>{b.booking_type}</td>
@@ -114,7 +124,7 @@ export default function CheckInOut() {
   return (
     <>
       <div className="page-head">
-        <div><h1>Check-in and check-out</h1><p>Approved bookings arriving, staying and coming up.</p></div>
+        <div><h1>Check-in and check-out</h1><p>Approved bookings arriving, staying and coming up. For RUB rate bookings, check the guest's staff ID card at check-in and check-out.</p></div>
         <Field label="Day"><input type="date" value={day} onChange={(e) => setDay(e.target.value)} /></Field>
       </div>
       <Notice type={act.msg.type}>{act.msg.text}</Notice>

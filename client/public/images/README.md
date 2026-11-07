@@ -1,52 +1,27 @@
-# Pictures for the G-Link website (21 in total)
+# Pictures on the G-Link website
 
-Save each picture **with exactly the name below** in the folder shown. The site picks it up
-automatically: the dashed "Photo needed" box is replaced by the picture. No code changes needed.
+All photos are of the CST guest house, taken by the team, resized to at most 1080 px and compressed
+(about 2 MB for all 22). Replace a picture by saving a new file **with the same name**: the site picks it up,
+no code change. The list in code is `client/src/photos.js`. If a file is missing, the site shows a
+dashed "Photo needed" box with the file name.
 
-- Photos: **JPG**, landscape (wider than tall, 3:2, for example 1500 x 1000 px), under 500 KB each.
-- Floor plans and the campus map: **PNG** (or JPG renamed to the name below), 4:3, clear labels.
-- Take photos in daylight with the lights on and the room tidy. No people in the photos.
-
-## Guest house (3 photos), shown on the Home page
-
-| Save as | What to photograph |
+| File | Where it is shown |
 |---|---|
-| `guesthouse/exterior.jpg` | Front of the guest house building and its entrance |
-| `guesthouse/entrance.jpg` | Entrance / reception, where guests arrive and check in |
-| `guesthouse/washroom.jpg` | The washroom or bathroom guests use |
+| `guesthouse/evening.jpg` | Home page banner |
+| `guesthouse/front.jpg`, `garden.jpg`, `back.jpg`, `entrance.jpg` | Home page, "The guest house" |
+| `guesthouse/front-night.jpg` | Sign in page |
+| `facilities/dining-room.jpg`, `canteen.jpg`, `outdoor-dining.jpg` | Home page, "Facilities" |
+| `rooms/three-bed-1.jpg` ... `three-bed-3.jpg`, `three-bed-bath.jpg` | Rooms page, every 3-bed room |
+| `rooms/suite-bedroom.jpg`, `suite-lounge.jpg`, `suite-kitchen.jpg`, `suite-bath.jpg`, `suite-entrance.jpg` | Rooms page, the suite (room type "Suite"); the lounge also on Home |
+| `hall/hall-1.jpg`, `hall-3.jpg` | Meeting hall page (hall-1 also on Home, hall-3 on Floor map) |
+| `floors/ground-corridor.jpg`, `first-corridor.jpg` | Floor map page |
+| `floor-maps/floor-1.svg` | Floor map page: ground floor plan, drawn from the team's sketch (not to scale) |
 
-## Rooms (2 photos per room, 6 rooms = 12 photos), shown on the Rooms page
+## Still to add (optional)
 
-Named by room number. For each of **101, 102, 103, 201, 202, 203**:
-
-| Save as | What to photograph |
+| File | What it should show |
 |---|---|
-| `rooms/101-1.jpg` | Whole room from the doorway, showing all 3 beds |
-| `rooms/101-2.jpg` | One bed with the table, wardrobe or shelf next to it |
+| `floor-maps/floor-2.svg` (or `.png` renamed in `photos.js`) | First floor plan. Until then the Floor map page shows the first floor corridor photo. |
+| `floor-maps/campus-map.png` | Where the guest house is on the CST campus, with the main gate. Until then the front photo is shown. |
 
-(then `rooms/102-1.jpg`, `rooms/102-2.jpg`, ... up to `rooms/203-2.jpg`). If the admin adds a new room,
-add two more photos with its number.
-
-## Meeting hall (3 photos), shown on the Meeting hall page
-
-The meeting hall is inside the guest house.
-
-| Save as | What to photograph |
-|---|---|
-| `hall/hall-1.jpg` | Whole hall from the entrance, showing the 25 seats |
-| `hall/hall-2.jpg` | The front: screen, projector or whiteboard |
-| `hall/hall-3.jpg` | Close-up of the tables and chairs |
-
-## Floor maps (3 pictures), shown on the Floor map page
-
-| Save as | What it shows |
-|---|---|
-| `floor-maps/floor-1.png` | Ground floor plan: rooms 101, 102, 103, stairs, washrooms, exits, and the meeting hall if it is on this floor |
-| `floor-maps/floor-2.png` | First floor plan: rooms 201, 202, 203, stairs, washrooms, exits, and the meeting hall if it is on this floor |
-| `floor-maps/campus-map.png` | CST campus map: where the guest house (with its meeting hall inside) is, with the main gate |
-
-Room numbers start with the floor number (1xx = ground floor, 2xx = first floor), so a new floor
-3 needs `floor-maps/floor-3.png`. A floor plan can be drawn in any tool (even PowerPoint or
-draw.io) and exported as an image.
-
-The list in code is `client/src/photos.js`.
+Room photos go by **room type**: rooms of type "Suite" show the suite photos, all others the 3-bed room photos.

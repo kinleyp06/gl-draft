@@ -10,7 +10,6 @@ export const SITE_INFO = {
   website: 'https://www.cst.edu.bt',
   // "Open in Google Maps" opens the guest house's own pin (link shared by the team).
   mapLink: 'https://maps.app.goo.gl/xCGLrPW2qwKxTYRAA',
-  // The map in the footer shows this place. Replace with the guest house's coordinates
-  // (e.g. '26.8500,89.3900') for an exact pin.
-  mapQuery: 'College of Science and Technology, Rinchending, Phuentsholing, Bhutan',
+  // The map in the footer is centred on the guest house (its exact coordinates: latitude, longitude).
+  mapQuery: '26.848890,89.396578',
 };

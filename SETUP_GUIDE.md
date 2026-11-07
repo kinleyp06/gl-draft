@@ -346,7 +346,9 @@ CLIENT_URL=http://localhost:5173
 
 ## Pictures (rooms, hall, floor maps)
 
-The site shows a dashed **Photo needed** / **Map needed** box wherever a picture is missing, with what to photograph and the file name. **21 pictures** are needed: 3 of the guest house, 2 per room (12), 3 of the meeting hall, a floor plan for each of the 2 floors, and 1 campus map. The full list is in `client/public/images/README.md`. Save each file with the exact name shown and it appears without any code change.
+The site uses the team's photos of the CST guest house (22 pictures, resized and compressed to about 2 MB in total) and a ground floor plan drawn from the team's sketch. Where they appear: Home (evening banner, the building, Facilities: dining room, canteen, outdoor dining, conference hall, Suite 1), Rooms (3-bed room photos for every room, suite photos for rooms of type "Suite"), Meeting hall, Floor map and Sign in. The full list is in `client/public/images/README.md`. To change a picture, save a new file with the same name.
+
+Still optional: a first floor plan (`floor-maps/floor-2.svg`) and a campus map (`floor-maps/campus-map.png`); until they exist the site shows the first floor corridor photo and the front of the guest house instead.
 
 ## Updating a laptop that already has the project
 

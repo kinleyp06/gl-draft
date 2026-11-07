@@ -33,7 +33,7 @@ router.get('/rooms/availability', optionalAuth, asyncHandler(async (req, res) =>
   const [rooms] = await pool.query(
     `SELECT r.*, g.status AS gh_status, g.guesthouse_name FROM rooms r
        JOIN guest_houses g ON g.guesthouse_id = r.guesthouse_id
-      WHERE r.guesthouse_id = ? ORDER BY r.room_number`,
+      WHERE r.guesthouse_id = ? ORDER BY r.floor, r.vip_only, LENGTH(r.room_number), r.room_number`,
     [guesthouse_id]
   );
   const myGender = req.user?.gender || null;
@@ -44,7 +44,8 @@ router.get('/rooms/availability', optionalAuth, asyncHandler(async (req, res) =>
     });
     const exclusive = await checkRoom(pool, room, { checkIn: check_in, checkOut: check_out, bookingType: 'Exclusive' });
     let label;
-    if (room.room_status === 'Maintenance' || room.gh_status !== 'Available') label = 'Not open for booking';
+    if (room.vip_only) label = 'Reserved for college VIP guests';
+    else if (room.room_status === 'Maintenance' || room.gh_status !== 'Available') label = 'Not open for booking';
     else if (bed.bedsFree === 0) label = 'Full';
     else if (bed.shared && bed.sharingAllowed) label = `Shared room, ${bed.bedsFree} bed(s) available`;
     else if (bed.shared) label = 'Occupied (not shared)';
@@ -56,6 +57,8 @@ router.get('/rooms/availability', optionalAuth, asyncHandler(async (req, res) =>
       room_type: room.room_type,
       capacity: room.capacity,
       room_status: room.room_status,
+      floor: room.floor,
+      vip_only: !!room.vip_only,
       description: room.description,
       beds_free: bed.bedsFree,
       shared: bed.shared && bed.sharingAllowed,

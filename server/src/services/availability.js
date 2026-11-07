@@ -56,6 +56,11 @@ async function checkRoom(conn, room, opts) {
     hosts: occupants,
   };
 
+  // The suites are reserved for college VIP guests: nobody books them; the admin uses a room block.
+  if (room.vip_only) {
+    result.reason = 'Reserved for college VIP guests. It cannot be booked online.';
+    return result;
+  }
   if (room.room_status === 'Maintenance' || (room.gh_status && room.gh_status !== 'Available')) {
     result.reason = 'This room is not open for booking right now.';
     return result;

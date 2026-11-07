@@ -391,7 +391,7 @@ router.get('/rooms', asyncHandler(async (req, res) => {
   if (req.query.guesthouse_id) { where += ' AND r.guesthouse_id = ?'; params.push(req.query.guesthouse_id); }
   const [rows] = await pool.query(
     `SELECT r.*, g.guesthouse_name FROM rooms r JOIN guest_houses g ON g.guesthouse_id = r.guesthouse_id
-      WHERE ${where} ORDER BY g.guesthouse_name, r.room_number`,
+      WHERE ${where} ORDER BY g.guesthouse_name, r.floor, r.vip_only, LENGTH(r.room_number), r.room_number`,
     params
   );
   res.json({ rooms: rows });
@@ -400,15 +400,18 @@ router.get('/rooms', asyncHandler(async (req, res) => {
 function readRoom(b) {
   v.required(b, ['guesthouse_id', 'room_number', 'room_type', 'capacity']);
   v.maxLen(b.room_number, 10, 'Room number');
-  v.oneOf(b.room_type, ['Single', 'Double', 'Suite'], 'Room type');
+  v.oneOf(b.room_type, ['Single', 'Double', 'Triple', 'Suite'], 'Room type');
   const status = b.room_status || 'Available';
   v.oneOf(status, ['Available', 'Occupied', 'Maintenance'], 'Room status');
-  return [v.positiveInt(b.guesthouse_id, 'Guest house'), String(b.room_number).trim(), b.room_type, v.positiveInt(b.capacity, 'Capacity'), status, b.description || null];
+  const floor = Number(b.floor ?? 0);
+  if (!Number.isInteger(floor) || floor < 0 || floor > 20) throw new HttpError(400, 'Floor must be 0 (ground floor), 1 (first floor) and so on.');
+  const vipOnly = b.vip_only === true || b.vip_only === 'true' || b.vip_only === 1;
+  return [v.positiveInt(b.guesthouse_id, 'Guest house'), String(b.room_number).trim(), b.room_type, v.positiveInt(b.capacity, 'Capacity'), floor, vipOnly, status, b.description || null];
 }
 
 router.post('/rooms', asyncHandler(async (req, res) => {
   const [ins] = await pool.query(
-    'INSERT INTO rooms (guesthouse_id, room_number, room_type, capacity, room_status, description) VALUES (?, ?, ?, ?, ?, ?)',
+    'INSERT INTO rooms (guesthouse_id, room_number, room_type, capacity, floor, vip_only, room_status, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     readRoom(req.body)
   );
   res.status(201).json({ message: 'Room added.', room_id: ins.insertId });
@@ -416,7 +419,7 @@ router.post('/rooms', asyncHandler(async (req, res) => {
 
 router.put('/rooms/:id', asyncHandler(async (req, res) => {
   await pool.query(
-    'UPDATE rooms SET guesthouse_id = ?, room_number = ?, room_type = ?, capacity = ?, room_status = ?, description = ? WHERE room_id = ?',
+    'UPDATE rooms SET guesthouse_id = ?, room_number = ?, room_type = ?, capacity = ?, floor = ?, vip_only = ?, room_status = ?, description = ? WHERE room_id = ?',
     [...readRoom(req.body), req.params.id]
   );
   res.json({ message: 'Room saved.' });

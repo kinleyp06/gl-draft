@@ -14,6 +14,11 @@ const TABLES = ['users', 'guest_houses', 'rooms', 'bookings', 'booking_guests', 
     if (cols.length) console.log('OK      payments.payment_method');
     else console.log('MISSING payments.payment_method  -> run database/updates/01_add_payment_method.sql once');
   }
+  if (found.includes('rooms')) {
+    const [cols] = await pool.query("SHOW COLUMNS FROM rooms LIKE 'floor'");
+    if (cols.length) console.log('OK      rooms.floor');
+    else console.log('MISSING rooms.floor  -> run database/updates/04_real_rooms_floors_vip_suites.sql once');
+  }
   await pool.end();
 })().catch((err) => {
   console.error('Cannot connect to MySQL:', err.message);

@@ -57,11 +57,13 @@ CREATE TABLE IF NOT EXISTS rooms (
 ) ENGINE=InnoDB;
 
 -- ===================== schema/04_bookings.sql =====================
--- 4. Bookings: one room booking by a signed-in guest. guest_category (RUB or Non-RUB) is copied from the
--- guest's profile when they book, so the bill stays the same even if the profile changes later.
+-- 4. Bookings: one room booking. guest_category (RUB or Non-RUB) is copied from the guest's profile when they
+-- book, so the bill stays the same even if the profile changes later. International guests have no account:
+-- an admin enters their booking (user_id NULL, created_by = that admin) and they pay the Non-RUB rate.
 CREATE TABLE IF NOT EXISTS bookings (
   booking_id        INT AUTO_INCREMENT PRIMARY KEY,
-  user_id           INT  NOT NULL,
+  user_id           INT  NULL,
+  created_by        INT  NULL,
   room_id           INT  NOT NULL,
   booking_type      ENUM('Exclusive','Per Bed','Family/Group') NOT NULL,
   guest_category    ENUM('RUB','Non-RUB') NOT NULL,
@@ -80,6 +82,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   checked_out_at    DATETIME NULL,
   checked_by        INT  NULL,
   CONSTRAINT fk_bookings_user       FOREIGN KEY (user_id)     REFERENCES users(user_id),
+  CONSTRAINT fk_bookings_created_by FOREIGN KEY (created_by)  REFERENCES users(user_id),
   CONSTRAINT fk_bookings_room       FOREIGN KEY (room_id)     REFERENCES rooms(room_id),
   CONSTRAINT fk_bookings_approved   FOREIGN KEY (approved_by) REFERENCES users(user_id),
   CONSTRAINT fk_bookings_checked    FOREIGN KEY (checked_by)  REFERENCES users(user_id),
@@ -91,6 +94,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 -- ===================== schema/05_booking_guests.sql =====================
 -- 5. Booking_Guests: additional guests on a booking (the booker comes from users).
 -- Each is RUB (with staff ID) or Non-RUB and pays the per-bed rate of their own category.
+-- For an international guest's booking (entered by an admin), ALL guests, the main guest too, are stored here.
 CREATE TABLE IF NOT EXISTS booking_guests (
   guest_id        INT AUTO_INCREMENT PRIMARY KEY,
   booking_id      INT NOT NULL,

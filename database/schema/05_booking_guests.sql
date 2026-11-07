@@ -1,5 +1,6 @@
 -- 5. Booking_Guests: additional guests on a booking (the booker comes from users).
 -- Each is RUB (with staff ID) or Non-RUB and pays the per-bed rate of their own category.
+-- For an international guest's booking (entered by an admin), ALL guests, the main guest too, are stored here.
 CREATE TABLE IF NOT EXISTS booking_guests (
   guest_id        INT AUTO_INCREMENT PRIMARY KEY,
   booking_id      INT NOT NULL,

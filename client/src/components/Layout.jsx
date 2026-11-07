@@ -27,6 +27,7 @@ const MENUS = {
     ['/admin/bookings', 'Bookings'],
     ['/admin/extensions', 'Extensions'],
     ['/admin/halls', 'Hall'],
+    ['/admin/international', 'International guest'],
     ['/admin/rooms', 'Rooms'],
     ['/admin/blocks', 'Blocks'],
     ['/admin/rates', 'Rates'],

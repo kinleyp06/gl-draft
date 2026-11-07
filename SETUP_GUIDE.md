@@ -250,6 +250,7 @@ From now on keep working in your branch, and bring `main` into it before startin
 | Bookings | `/admin/bookings` | `pages/admin/ManageBookings.jsx` | Admin | Review requests (approve/reject sets approved_by + approval_date), contact details, change rooms for others |
 | Extensions | `/admin/extensions` | `pages/admin/Extensions.jsx` | Admin | Approve stay extensions (beds free check, new check-out, extension count +1, extra nights billed) |
 | Hall | `/admin/halls` | `pages/admin/HallBookings.jsx` | Admin | Manage hall bookings, hall price and status |
+| International guest | `/admin/international` | `pages/admin/InternationalBooking.jsx` | Admin | Book for an international guest (no account) and record their details; billed at the Non-RUB rate, approved at once |
 | Rooms | `/admin/rooms` | `pages/admin/ManageRooms.jsx` | Admin | Manage guest houses, rooms and room availability |
 | Blocks | `/admin/blocks` | `pages/admin/RoomBlocks.jsx` | Admin | Block rooms/beds for VIP or official guests (no booking made) |
 | Rates | `/admin/rates` | `pages/admin/Rates.jsx` | Admin | Edit rate table (RUB and Non-RUB rates, GST) |
@@ -310,10 +311,11 @@ Use **real email addresses you can open** for every test account (for example yo
 
 **F. Admin tools**
 19. **Blocks**: block 3 beds of room 102 for VIP/official reservation. Guests now see room 102 as Full for those dates. No booking is created.
-20. **Bookings** > a booking > **Change room to** another room: the guest gets an email.
-21. **Rooms**: set a room to Maintenance: it shows "Not open for booking".
-22. **Payments** > choose how the guest paid in **Paid by** > **Mark paid** (used for hall bills, or any bill paid before check-out).
-23. **Users** (Super Admin): set a user Inactive: they can no longer sign in.
+20. **International guest**: Admin > **International guest** > room, dates, the guest's name, gender and passport number > **Save booking**. It is approved at once with a Non-RUB bill; `user_id` is empty and `created_by` is the admin in the database. It shows under Bookings and Check-in / out like any other booking (no emails, as the guest has no account).
+21. **Bookings** > a booking > **Change room to** another room: the guest gets an email.
+22. **Rooms**: set a room to Maintenance: it shows "Not open for booking".
+23. **Payments** > choose how the guest paid in **Paid by** > **Mark paid** (used for hall bills, or any bill paid before check-out).
+24. **Users** (Super Admin): set a user Inactive: they can no longer sign in.
 
 ---
 
@@ -349,7 +351,7 @@ The site shows a dashed **Photo needed** / **Map needed** box wherever a picture
 ## Updating a laptop that already has the project
 
 After pulling these changes:
-1. In Workbench run the files in `database/updates/` once each, in order (`01_...`, then `02_...`), or `DROP DATABASE g_link;` and run `all_in_one.sql` again (easier if you only have test data).
+1. In Workbench run the files in `database/updates/` once each, in order (`01_...`, `02_...`, then `03_...`), or `DROP DATABASE g_link;` and run `all_in_one.sql` again (easier if you only have test data).
 2. Add the email settings to your own `server/.env` (see **Email setup**).
 3. `cd server` > `npm run check-db` > `npm run dev`, and `cd client` > `npm run dev`.
 
@@ -363,7 +365,7 @@ After pulling these changes:
 4. **"Beds free" counts approved bookings and blocks** (as the System Flow notes say), on the busiest night of the stay. Approval checks again, so two pending requests can never both be approved for the same last bed.
 5. **Sharing:** if a room has any approved bed-level booking for those dates, every occupant must have ticked Allow sharing and all new guests must have the occupant's gender.
 6. **Room block end date works like a check-out date** (block 1 to 3 Nov = nights of 1 and 2 Nov). **Hall dates are both used days** (1 to 2 Nov = 2 days).
-7. **Only two kinds of guest: RUB (Royal University of Bhutan) members and Non-RUB.** No International guests. The **RUB member** switch on the profile sets the rate; RUB members must give a staff ID and department/affiliation, which the admin sees when approving. The category is saved on each booking, so changing the profile later does not change existing bills. Every account confirms its email before signing in.
+7. **Only two kinds of guest: RUB (Royal University of Bhutan) members and Non-RUB.** International guests have no account: the admin books them on the **International guest** page and they pay the Non-RUB rate. The **RUB member** switch on the profile sets the rate; RUB members must give a staff ID and department/affiliation, which the admin sees when approving. The category is saved on each booking, so changing the profile later does not change existing bills. Every account confirms its email before signing in.
 8. **A bill (payment row) is created when the admin approves**; the guest sees an estimate while booking. Extension and extra-people charges are added as extra rows.
 9. **Limits:** a stay is at most 30 nights per booking or extension; a hall booking at most 14 days. Change `MAX_NIGHTS` in `server/src/services/bookingRequest.js` or the 14 in `hallRules.js`.
 10. **Room status** changes on check-in (Occupied) and check-out (Available); Maintenance is set by the admin and never overwritten.
@@ -392,4 +394,5 @@ After pulling these changes:
 | Pictures show "Photo needed" | Expected until the pictures are added; see `client/public/images/README.md` |
 | Cannot book: "complete your profile" | Fill in every profile field (RUB members also need staff ID and department) |
 | `check-db` OK but sign-up fails with "Unknown column 'is_rub_member'" | Run `database/updates/02_rub_non_rub_and_hall_in_guest_house.sql` once |
+| International guest booking fails with "Unknown column 'created_by'" or "cannot be null" | Run `database/updates/03_international_guest_bookings.sql` once |
 | `mysql` is not recognised in PowerShell | Use MySQL Workbench instead, or add `C:\Program Files\MySQL\MySQL Server 8.0\bin` to PATH |

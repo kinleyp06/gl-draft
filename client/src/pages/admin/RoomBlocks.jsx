@@ -23,7 +23,7 @@ export default function RoomBlocks() {
 
   return (
     <>
-      <div className="page-head"><div><h1>Room blocks</h1><p>For VIP or official guests: block beds so nobody else can book them.</p></div></div>
+      <div className="page-head"><div><h1>Room blocks</h1><p>For VIP or official guests: block beds so nobody else can book them. The VIP suites are reserved here too.</p></div></div>
       <Notice type={act.msg.type}>{act.msg.text}</Notice>
       <Notice type="error">{error}</Notice>
       <form className="panel stack" onSubmit={save}>
@@ -31,7 +31,7 @@ export default function RoomBlocks() {
           <Field label="Room">
             <select required value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })}>
               <option value="">Choose a room</option>
-              {(data?.rooms || []).map((r) => <option key={r.room_id} value={r.room_id}>{r.guesthouse_name} - Room {r.room_number}</option>)}
+              {(data?.rooms || []).map((r) => <option key={r.room_id} value={r.room_id}>{r.guesthouse_name} - {r.vip_only ? `${r.room_number} (VIP suite)` : `Room ${r.room_number}`}</option>)}
             </select>
           </Field>
           <Field label="Beds to block" hint="3 = the whole room">

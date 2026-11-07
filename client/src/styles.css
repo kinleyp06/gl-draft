@@ -288,3 +288,5 @@ html { overflow-x: clip; }
 .auth-form { padding: 2rem 2rem 1.5rem; display: flex; flex-direction: column; justify-content: center; }
 @media (max-width: 760px) { .auth-split { grid-template-columns: 1fr; } .auth-photo { min-height: 200px; } .auth-form { padding: 1.25rem; } }
 .floor .stack > .photo { margin-top: 0.75rem; }
+.vip-tag { display: inline-block; font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em; color: #fff; background: var(--accent); border-radius: 4px; padding: 0.05rem 0.4rem; margin-right: 0.25rem; vertical-align: 1px; }
+.floor-rooms li.vip { background: var(--accent-soft); border-color: #e2cfae; }

@@ -66,7 +66,7 @@ function Detail({ id, onChanged }) {
           <Field label="Change room to">
             <select value={newRoom} onChange={(e) => setNewRoom(e.target.value)}>
               <option value="">Choose a room</option>
-              {data.rooms.filter((r) => r.room_id !== b.room_id).map((r) => (
+              {data.rooms.filter((r) => r.room_id !== b.room_id && !r.vip_only).map((r) => (
                 <option key={r.room_id} value={r.room_id}>{r.guesthouse_name} - Room {r.room_number}</option>
               ))}
             </select>

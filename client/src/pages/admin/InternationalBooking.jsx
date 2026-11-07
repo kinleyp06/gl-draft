@@ -75,7 +75,7 @@ export default function InternationalBooking() {
           <Field label="Room">
             <select required value={form.room_id} onChange={(e) => setForm({ ...form, room_id: e.target.value })}>
               <option value="">Choose a room</option>
-              {(base.data?.rooms || []).map((r) => <option key={r.room_id} value={r.room_id}>{r.guesthouse_name} - Room {r.room_number}</option>)}
+              {(base.data?.rooms || []).filter((r) => !r.vip_only).map((r) => <option key={r.room_id} value={r.room_id}>{r.guesthouse_name} - Room {r.room_number}</option>)}
             </select>
           </Field>
           <Field label="Booking type">

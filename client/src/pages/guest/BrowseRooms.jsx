@@ -46,7 +46,7 @@ export default function BrowseRooms() {
       <div className="page-head">
         <div>
           <h1>Find a room</h1>
-          <p>Pick your dates to see free beds. Rooms have 3 beds. <Link to="/floor-map">See the floor map</Link>.</p>
+          <p>Pick your dates to see free beds. Rooms 1–8 have 3 beds each; the two suites are reserved for college VIP guests. <Link to="/floor-map">See the floor map</Link>.</p>
         </div>
       </div>
       {!user && <Notice type="info">You can look around without an account. To book, <Link to="/login">sign in</Link> or <Link to="/register">create an account</Link>.</Notice>}
@@ -88,19 +88,21 @@ export default function BrowseRooms() {
           {results.length === 0 && <Empty>This guest house has no rooms yet.</Empty>}
           <div className="grid">
             {results.map((r) => {
-              const closed = r.label === 'Not open for booking';
+              const closed = r.vip_only || r.label === 'Not open for booking';
               return (
                 <div className="panel room-card with-photos" key={r.room_id}>
                   <PhotoSwitcher photos={roomPhotos(r)} />
                   <div className="room-body">
                   <KeyTag number={r.room_number} closed={closed || r.beds_free === 0} />
                   <div style={{ flex: 1 }}>
-                    <h3>Room {r.room_number}</h3>
-                    <div className="small muted">{r.room_type}, {r.capacity} beds</div>
-                    <BedPips capacity={r.capacity} free={r.beds_free} />
+                    <h3>{r.vip_only ? r.room_number : `Room ${r.room_number}`}</h3>
+                    <div className="small muted">
+                      {r.vip_only ? <><span className="vip-tag">VIP</span> Suite</> : r.room_type === 'Triple' ? `3-bed room, ${r.floor === 0 ? 'ground' : 'first'} floor` : `${r.room_type}, ${r.capacity} beds`}
+                    </div>
+                    {!r.vip_only && <BedPips capacity={r.capacity} free={r.beds_free} />}
                     <div><strong>{r.label}</strong></div>
                     {r.shared && <div className="small muted">Occupant allows sharing: {r.occupant_gender?.toLowerCase()} guests only.</div>}
-                    {!r.bed_available_for_me && r.reason && <div className="small muted">{r.reason}</div>}
+                    {!r.vip_only && !r.bed_available_for_me && r.reason && <div className="small muted">{r.reason}</div>}
                     {r.description && <div className="small muted">{r.description}</div>}
                     <div className="actions" style={{ marginTop: '0.6rem' }}>
                       {!user && (r.bed_available_for_me || r.exclusive_available) && (

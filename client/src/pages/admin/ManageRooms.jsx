@@ -4,7 +4,8 @@ import { api } from '../../api.js';
 import { Badge, Field, Notice, useAction, useLoad } from '../../components/ui.jsx';
 
 const newGh = { guesthouse_name: '', location: '', description: '', contact_number: '', status: 'Available' };
-const newRoom = { guesthouse_id: '', room_number: '', room_type: 'Double', capacity: 3, room_status: 'Available', description: '' };
+const newRoom = { guesthouse_id: '', room_number: '', room_type: 'Triple', capacity: 3, floor: 0, vip_only: false, room_status: 'Available', description: '' };
+const FLOORS = ['Ground floor', 'First floor', 'Second floor'];
 
 export default function ManageRooms() {
   const { data, error, reload } = useLoad(async () => {
@@ -31,7 +32,7 @@ export default function ManageRooms() {
 
   return (
     <>
-      <div className="page-head"><div><h1>Guest houses and rooms</h1><p>Rooms are 3-bedded. Put a room in Maintenance to stop new bookings.</p></div></div>
+      <div className="page-head"><div><h1>Guest houses and rooms</h1><p>Rooms 1–8 have 3 beds each. The suites are for college VIP guests only (reserve them on Blocks). Put a room in Maintenance to stop new bookings.</p></div></div>
       <Notice type={act.msg.type}>{act.msg.text}</Notice>
       <Notice type="error">{error}</Notice>
 
@@ -69,11 +70,12 @@ export default function ManageRooms() {
       <h2>Rooms</h2>
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Guest house</th><th>Room</th><th>Type</th><th>Beds</th><th>Status</th><th>Set status</th><th></th></tr></thead>
+          <thead><tr><th>Guest house</th><th>Room</th><th>Floor</th><th>Type</th><th>Beds</th><th>Who can book</th><th>Status</th><th>Set status</th><th></th></tr></thead>
           <tbody>
             {(data?.rooms || []).map((r) => (
               <tr key={r.room_id}>
-                <td>{r.guesthouse_name}</td><td>{r.room_number}</td><td>{r.room_type}</td><td>{r.capacity}</td>
+                <td>{r.guesthouse_name}</td><td>{r.room_number}</td><td>{FLOORS[r.floor] || `Floor ${r.floor}`}</td><td>{r.room_type}</td><td>{r.capacity}</td>
+                <td>{r.vip_only ? <><span className="vip-tag">VIP</span> College VIP only</> : 'Guests'}</td>
                 <td><Badge value={r.room_status} /></td>
                 <td>
                   <select value={r.room_status} onChange={(e) => quickStatus(r, e.target.value)} aria-label={`Status of room ${r.room_number}`}>
@@ -88,7 +90,7 @@ export default function ManageRooms() {
       </div>
       <form className="panel stack" onSubmit={saveRoom} style={{ marginTop: '1rem' }}>
         <h3>{room.room_id ? `Edit room ${room.room_number}` : 'Add a room'}</h3>
-        <div className="row">
+        <div className="form-grid four">
           <Field label="Guest house">
             <select required value={room.guesthouse_id} onChange={(e) => setRoom({ ...room, guesthouse_id: e.target.value })}>
               <option value="">Choose</option>
@@ -97,13 +99,22 @@ export default function ManageRooms() {
           </Field>
           <Field label="Room number"><input required maxLength={10} value={room.room_number} onChange={(e) => setRoom({ ...room, room_number: e.target.value })} /></Field>
           <Field label="Room type">
-            <select value={room.room_type} onChange={(e) => setRoom({ ...room, room_type: e.target.value })}><option>Single</option><option>Double</option><option>Suite</option></select>
+            <select value={room.room_type} onChange={(e) => setRoom({ ...room, room_type: e.target.value })}><option value="Triple">Triple (3-bed)</option><option>Double</option><option>Single</option><option>Suite</option></select>
           </Field>
           <Field label="Beds"><input type="number" min={1} max={10} required value={room.capacity} onChange={(e) => setRoom({ ...room, capacity: e.target.value })} /></Field>
+          <Field label="Floor">
+            <select value={room.floor ?? 0} onChange={(e) => setRoom({ ...room, floor: Number(e.target.value) })}>
+              {FLOORS.map((f, i) => <option key={f} value={i}>{f}</option>)}
+            </select>
+          </Field>
           <Field label="Status">
             <select value={room.room_status} onChange={(e) => setRoom({ ...room, room_status: e.target.value })}><option>Available</option><option>Occupied</option><option>Maintenance</option></select>
           </Field>
         </div>
+        <label className="check">
+          <input type="checkbox" checked={!!room.vip_only} onChange={(e) => setRoom({ ...room, vip_only: e.target.checked })} />
+          <span>Reserved for college VIP guests (like the suites): guests cannot book it; reserve it with a room block.</span>
+        </label>
         <Field label="Description"><textarea rows={2} value={room.description} onChange={(e) => setRoom({ ...room, description: e.target.value })} /></Field>
         <div className="actions">
           <button className="btn" disabled={act.busy}>{room.room_id ? 'Save room' : 'Add room'}</button>

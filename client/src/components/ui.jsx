@@ -48,7 +48,8 @@ export function Empty({ children }) {
 
 // Room number shaped like a guest house key tag.
 export function KeyTag({ number, closed }) {
-  return <div className={`keytag ${closed ? 'closed' : ''}`} aria-hidden="true">{number}</div>;
+  const text = String(number).replace(/^suite\s*/i, 'S'); // "Suite 1" fits the tag as "S1"
+  return <div className={`keytag ${closed ? 'closed' : ''}`} aria-hidden="true">{text}</div>;
 }
 
 // One small bed icon per bed: filled = taken, outline = free.

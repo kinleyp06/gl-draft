@@ -39,7 +39,7 @@ export default function Home() {
           <div className="eyebrow">College of Science and Technology · Rinchending, Phuentsholing</div>
           <h1>Stay at the CST guest house</h1>
           <p>
-            Comfortable 3-bed rooms, a private suite and a conference hall on campus. See free beds, prices and the
+            Eight 3-bed rooms and a conference hall on campus, plus two suites for college VIP guests. See free beds, prices and the
             floor map with no account; sign in to book and get the answer by email.
           </p>
           <div className="actions">
@@ -52,7 +52,7 @@ export default function Home() {
           </p>
         </div>
         <ul className="hero-facts">
-          <li><strong>3-bed rooms</strong><span>and Suite 1</span></li>
+          <li><strong>8 rooms</strong><span>3 beds each</span></li>
           <li><strong>{hall ? `${hall.capacity}-seat` : '25-seat'}</strong><span>conference hall</span></li>
           <li><strong>8 am – 10:30 pm</strong><span>check-in</span></li>
           <li><strong>12 noon</strong><span>check-out</span></li>

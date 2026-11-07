@@ -27,7 +27,7 @@ export default function FloorMap() {
   }, [guesthouseId]);
 
   const floors = {};
-  for (const r of rooms.data || []) (floors[floorOf(r.room_number)] ||= []).push(r);
+  for (const r of rooms.data || []) (floors[floorOf(r)] ||= []).push(r);
 
   return (
     <>
@@ -35,7 +35,7 @@ export default function FloorMap() {
         <div>
           <div className="eyebrow">Find your way</div>
           <h1>Floor map</h1>
-          <p>Where each room is, and how many beds are free tonight. Rooms have 3 beds.</p>
+          <p>Where each room is, and how many beds are free tonight. Rooms 1–4 are on the ground floor and 5–8 on the first floor, 3 beds each. The two suites are reserved for college VIP guests.</p>
         </div>
         {base.data?.guesthouses.length > 1 && (
           <Field label="Guest house">
@@ -51,7 +51,7 @@ export default function FloorMap() {
       {guesthouse && <h2>{guesthouse.guesthouse_name}<span className="small muted"> | {guesthouse.location}</span></h2>}
       {rooms.data && rooms.data.length === 0 && <Empty>This guest house has no rooms yet.</Empty>}
 
-      {Object.keys(floors).sort().map((floor) => (
+      {Object.keys(floors).sort((a, b) => a - b).map((floor) => (
         <section className="panel" key={floor}>
           <h3>{floorName(floor)}</h3>
           <div className="floor">
@@ -62,13 +62,19 @@ export default function FloorMap() {
             <div className="stack">
             <ul className="floor-rooms">
               {floors[floor].map((r) => (
-                <li key={r.room_id}>
+                <li key={r.room_id} className={r.vip_only ? 'vip' : ''}>
                   <span className="num">{r.room_number}</span>
-                  <span style={{ flex: 1 }}>
-                    <BedPips capacity={r.capacity} free={r.beds_free} />
-                    <span className="small">{r.label} tonight</span>
-                  </span>
-                  <Link className="btn secondary small" to="/rooms">Check dates</Link>
+                  {r.vip_only ? (
+                    <span style={{ flex: 1 }} className="small"><span className="vip-tag">VIP</span> Reserved for college VIP guests</span>
+                  ) : (
+                    <>
+                      <span style={{ flex: 1 }}>
+                        <BedPips capacity={r.capacity} free={r.beds_free} />
+                        <span className="small">{r.label} tonight</span>
+                      </span>
+                      <Link className="btn secondary small" to="/rooms">Check dates</Link>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

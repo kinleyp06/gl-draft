@@ -42,18 +42,23 @@ CREATE TABLE IF NOT EXISTS guest_houses (
 ) ENGINE=InnoDB;
 
 -- ===================== schema/03_rooms.sql =====================
--- 3. Rooms: 3-bedded, availability managed per bed. Charges live in rates, not here.
+-- 3. Rooms: availability managed per bed. Charges live in rates, not here.
+-- floor: 0 = ground floor, 1 = first floor. vip_only: reserved for college VIP guests (the suites):
+-- guests cannot book it; the admin reserves it with a room block.
 CREATE TABLE IF NOT EXISTS rooms (
   room_id        INT AUTO_INCREMENT PRIMARY KEY,
   guesthouse_id  INT         NOT NULL,
   room_number    VARCHAR(10) NOT NULL,
-  room_type      ENUM('Single','Double','Suite') NOT NULL DEFAULT 'Double',
+  room_type      ENUM('Single','Double','Triple','Suite') NOT NULL DEFAULT 'Triple',
   capacity       INT         NOT NULL DEFAULT 3,
+  floor          TINYINT     NOT NULL DEFAULT 0,
+  vip_only       BOOLEAN     NOT NULL DEFAULT FALSE,
   room_status    ENUM('Available','Occupied','Maintenance') NOT NULL DEFAULT 'Available',
   description    TEXT        NULL,
   CONSTRAINT fk_rooms_guesthouse FOREIGN KEY (guesthouse_id) REFERENCES guest_houses(guesthouse_id),
   CONSTRAINT uq_room_number UNIQUE (guesthouse_id, room_number),
-  CONSTRAINT chk_room_capacity CHECK (capacity > 0)
+  CONSTRAINT chk_room_capacity CHECK (capacity > 0),
+  CONSTRAINT chk_room_floor CHECK (floor >= 0)
 ) ENGINE=InnoDB;
 
 -- ===================== schema/04_bookings.sql =====================
@@ -240,18 +245,24 @@ INSERT INTO rates (guest_category, charge_type, rate, gst_percent) VALUES
 ON DUPLICATE KEY UPDATE guest_category = guest_category;
 
 -- ===================== seeds/02_guest_houses_and_rooms.sql =====================
--- SAMPLE data so the app has something to show. Replace with the real guest house details later.
+-- The CST guest house and its rooms.
 INSERT INTO guest_houses (guesthouse_id, guesthouse_name, location, description, contact_number, status) VALUES
   (1, 'CST Guest House', 'Rinchending, Phuentsholing', 'Guest house on the College of Science and Technology campus.', '05251000', 'Available')
 ON DUPLICATE KEY UPDATE guesthouse_name = VALUES(guesthouse_name);
 
-INSERT INTO rooms (guesthouse_id, room_number, room_type, capacity, room_status, description) VALUES
-  (1, '101', 'Double', 3, 'Available', 'Ground floor, 3 beds'),
-  (1, '102', 'Double', 3, 'Available', 'Ground floor, 3 beds'),
-  (1, '103', 'Double', 3, 'Available', 'Ground floor, 3 beds'),
-  (1, '201', 'Double', 3, 'Available', 'First floor, 3 beds'),
-  (1, '202', 'Double', 3, 'Available', 'First floor, 3 beds'),
-  (1, '203', 'Suite',  3, 'Available', 'First floor, 3 beds, attached sitting area')
+-- The CST guest house: rooms 1-4 on the ground floor, rooms 5-8 on the first floor (3 beds each),
+-- and two suites reserved for college VIP guests (Suite 1 ground floor, Suite 2 first floor).
+INSERT INTO rooms (guesthouse_id, room_number, room_type, capacity, floor, vip_only, room_status, description) VALUES
+  (1, '1',       'Triple', 3, 0, FALSE, 'Available', 'Attached bathroom'),
+  (1, '2',       'Triple', 3, 0, FALSE, 'Available', 'Attached bathroom'),
+  (1, '3',       'Triple', 3, 0, FALSE, 'Available', 'Attached bathroom'),
+  (1, '4',       'Triple', 3, 0, FALSE, 'Available', 'Attached bathroom'),
+  (1, '5',       'Triple', 3, 1, FALSE, 'Available', 'Attached bathroom'),
+  (1, '6',       'Triple', 3, 1, FALSE, 'Available', 'Attached bathroom'),
+  (1, '7',       'Triple', 3, 1, FALSE, 'Available', 'Attached bathroom'),
+  (1, '8',       'Triple', 3, 1, FALSE, 'Available', 'Attached bathroom'),
+  (1, 'Suite 1', 'Suite',  1, 0, TRUE,  'Available', 'Double bed, lounge, kitchenette and bathroom'),
+  (1, 'Suite 2', 'Suite',  1, 1, TRUE,  'Available', 'Double bed, lounge, kitchenette and bathroom')
 ON DUPLICATE KEY UPDATE room_type = VALUES(room_type);
 
 -- ===================== seeds/03_halls.sql =====================

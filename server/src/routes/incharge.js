@@ -17,7 +17,9 @@ const BOOKING_SELECT = `
   SELECT b.*, r.room_number, r.capacity, g.guesthouse_name,
          COALESCE(CONCAT(u.first_name,' ',u.last_name),
                   (SELECT full_name FROM booking_guests bg WHERE bg.booking_id = b.booking_id ORDER BY guest_id LIMIT 1)) AS guest_name,
-         u.phone_number AS guest_phone,
+         u.phone_number AS guest_phone, u.sid AS guest_staff_id,
+         (SELECT GROUP_CONCAT(CONCAT(bg.full_name, ': ', COALESCE(bg.staff_id, 'no staff ID')) SEPARATOR '; ')
+            FROM booking_guests bg WHERE bg.booking_id = b.booking_id AND bg.guest_category = 'RUB') AS rub_guests,
          (SELECT COALESCE(SUM(p.total_amount), 0) FROM payments p
            WHERE p.booking_id = b.booking_id AND p.payment_status = 'Unpaid') AS amount_due
     FROM bookings b JOIN rooms r ON r.room_id = b.room_id

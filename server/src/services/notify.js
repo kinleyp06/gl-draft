@@ -46,10 +46,14 @@ module.exports = {
     const u = await bookerEmail(booking);
     if (!u) return false;
     const billText = bill ? `\nAmount due: ${money(bill.total_amount)} (incl. GST ${money(bill.gst_amount)})` : '';
+    // RUB rate bookings: remind the guest that the staff ID is checked at the guest house.
+    const rubText = booking.booking_status === 'Approved' && booking.guest_category === 'RUB'
+      ? '\n\nStaff ID will be verified during check-in and check-out for RUB members. Please bring your staff ID.'
+      : '';
     return sendMail({
       to: u.email,
       subject: `G-Link: your booking #${booking.booking_id} was ${booking.booking_status.toLowerCase()}`,
-      text: `Hello ${u.first_name},\n\nYour room booking #${booking.booking_id} (${stayLine(booking)}) is now ${booking.booking_status}.${billText}`,
+      text: `Hello ${u.first_name},\n\nYour room booking #${booking.booking_id} (${stayLine(booking)}) is now ${booking.booking_status}.${billText}${rubText}`,
     });
   },
 

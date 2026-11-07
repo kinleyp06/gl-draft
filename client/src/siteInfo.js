@@ -8,6 +8,9 @@ export const SITE_INFO = {
   bookingContact: { label: 'Administrative Officer (bookings and changes)', phone: '17160538' },
   hours: 'Booking changes and check-in: 8 am to 10:30 pm. Check-out: 12 noon.',
   website: 'https://www.cst.edu.bt',
-  // Google Maps: the search below is shown on the map and opened by "Open in Google Maps".
+  // "Open in Google Maps" opens the guest house's own pin (link shared by the team).
+  mapLink: 'https://maps.app.goo.gl/xCGLrPW2qwKxTYRAA',
+  // The map in the footer shows this place. Replace with the guest house's coordinates
+  // (e.g. '26.8500,89.3900') for an exact pin.
   mapQuery: 'College of Science and Technology, Rinchending, Phuentsholing, Bhutan',
 };

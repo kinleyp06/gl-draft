@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { SITE_INFO as S } from '../siteInfo.js';
 
 const mapEmbed = `https://www.google.com/maps?q=${encodeURIComponent(S.mapQuery)}&z=15&output=embed`;
-const mapLink = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.mapQuery)}`;
+const mapLink = S.mapLink || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(S.mapQuery)}`;
 
 export default function Footer() {
   return (

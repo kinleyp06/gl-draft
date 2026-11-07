@@ -2,6 +2,7 @@
 // rooms, the meeting hall and the floor map), and the page area.
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import Footer from './Footer.jsx';
 
 const PUBLIC_MENU = [
   ['/', 'Home'],
@@ -74,6 +75,7 @@ export default function Layout() {
       <main className="page">
         <Outlet />
       </main>
+      <Footer />
     </>
   );
 }

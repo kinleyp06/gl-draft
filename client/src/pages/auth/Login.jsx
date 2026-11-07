@@ -1,9 +1,11 @@
 // Sign in with email ID. Then each role goes to its own start page.
+// The form sits beside an evening photo of the guest house.
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api.js';
 import { useAuth, homeFor } from '../../context/AuthContext.jsx';
 import { Field, Notice } from '../../components/ui.jsx';
+import { SIGN_IN_PHOTO, photoUrl } from '../../photos.js';
 
 export default function Login() {
   const { login } = useAuth();
@@ -38,7 +40,14 @@ export default function Login() {
   };
 
   return (
-    <div className="panel narrow">
+    <div className="auth-split">
+      <div className="auth-photo" style={{ backgroundImage: `linear-gradient(to top, rgba(0,27,97,0.85), rgba(0,27,97,0.05) 60%), url(${photoUrl(SIGN_IN_PHOTO.file)})` }} role="img" aria-label={SIGN_IN_PHOTO.label}>
+        <div>
+          <div className="eyebrow">CST Guest House</div>
+          <p>Welcome back. Sign in to book a bed, a room or the conference hall.</p>
+        </div>
+      </div>
+      <div className="auth-form">
       <h1>Sign in</h1>
       <Notice type="error">{error}</Notice>
       <Notice type="success">{info}</Notice>
@@ -55,6 +64,7 @@ export default function Login() {
         <button className="btn" disabled={busy}>{busy ? 'Signing in...' : 'Sign in'}</button>
       </form>
       <p className="small" style={{ marginTop: '1rem' }}>No account yet? <Link to="/register">Sign up</Link></p>
+      </div>
     </div>
   );
 }

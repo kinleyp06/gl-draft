@@ -91,7 +91,7 @@ export default function BrowseRooms() {
               const closed = r.label === 'Not open for booking';
               return (
                 <div className="panel room-card with-photos" key={r.room_id}>
-                  <PhotoSwitcher photos={roomPhotos(r.room_number)} />
+                  <PhotoSwitcher photos={roomPhotos(r)} />
                   <div className="room-body">
                   <KeyTag number={r.room_number} closed={closed || r.beds_free === 0} />
                   <div style={{ flex: 1 }}>

@@ -1,11 +1,12 @@
-// Shows a picture from client/public/images. If the file is not there yet, shows a
-// dashed placeholder saying which photo is needed and the file name to save it as.
+// Shows a picture from client/public/images. If the file is not there, it tries photo.fallback,
+// then shows a dashed placeholder saying which photo is needed and the file name to save it as.
 import { useState } from 'react';
 import { photoUrl } from '../photos.js';
 
-export function Photo({ photo, map = false }) {
-  const [missing, setMissing] = useState(false);
-  if (missing) {
+export function Photo({ photo, map = false, caption = false }) {
+  const [stage, setStage] = useState(0); // 0 = the photo, 1 = its fallback, 2 = missing
+  const file = stage === 0 ? photo.file : photo.fallback;
+  if (stage === 2 || !file) {
     return (
       <figure className={`photo placeholder ${map ? 'map' : ''}`}>
         <span className="ph-tag">{map ? 'Map needed' : 'Photo needed'}</span>
@@ -15,27 +16,34 @@ export function Photo({ photo, map = false }) {
       </figure>
     );
   }
+  const usingFallback = stage === 1;
   return (
-    <figure className={`photo ${map ? 'map' : ''}`}>
-      <img src={photoUrl(photo.file)} alt={photo.label} loading="lazy" onError={() => setMissing(true)} />
+    <figure className={`photo ${map && !usingFallback ? 'map' : ''} ${caption ? 'with-caption' : ''}`}>
+      <img
+        src={photoUrl(file)}
+        alt={photo.label}
+        loading="lazy"
+        onError={() => setStage(stage === 0 && photo.fallback ? 1 : 2)}
+      />
+      {caption && <figcaption>{photo.label}</figcaption>}
     </figure>
   );
 }
 
-export function Gallery({ photos }) {
+export function Gallery({ photos, caption = true }) {
   return (
     <div className="gallery">
-      {photos.map((p) => <Photo key={p.file} photo={p} />)}
+      {photos.map((p) => <Photo key={p.file} photo={p} caption={caption} />)}
     </div>
   );
 }
 
-// One photo at a time with small "1 / 2" buttons: fits narrow cards (used for each room).
+// One photo at a time with small numbered buttons: fits narrow cards (used for each room).
 export function PhotoSwitcher({ photos }) {
   const [i, setI] = useState(0);
   return (
     <div className="switcher">
-      <Photo key={photos[i].file} photo={photos[i]} />
+      <Photo key={photos[i].file} photo={photos[i]} caption />
       {photos.length > 1 && (
         <div className="switcher-dots" role="group" aria-label="Choose photo">
           {photos.map((p, j) => (

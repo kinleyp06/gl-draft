@@ -6,7 +6,7 @@ import { api, qs } from '../api.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import { BedPips, Empty, Field, Notice, addDaysStr, money, todayStr, useLoad } from '../components/ui.jsx';
 import { Photo } from '../components/Photo.jsx';
-import { SITE_MAP, floorName, floorOf, floorPlan } from '../photos.js';
+import { HALL_PHOTOS, SITE_MAP, floorCorridor, floorName, floorOf, floorPlan, hasFloorPlan } from '../photos.js';
 
 export default function FloorMap() {
   const { user } = useAuth();
@@ -55,7 +55,11 @@ export default function FloorMap() {
         <section className="panel" key={floor}>
           <h3>{floorName(floor)}</h3>
           <div className="floor">
-            <Photo photo={floorPlan(floor, floors[floor].map((r) => r.room_number))} map />
+            {/* The drawn plan if there is one; otherwise the corridor photo of that floor. */}
+            {hasFloorPlan(floor) || !floorCorridor(floor)
+              ? <Photo photo={floorPlan(floor, floors[floor].map((r) => r.room_number))} map />
+              : <Photo photo={floorCorridor(floor)} caption />}
+            <div className="stack">
             <ul className="floor-rooms">
               {floors[floor].map((r) => (
                 <li key={r.room_id}>
@@ -68,6 +72,8 @@ export default function FloorMap() {
                 </li>
               ))}
             </ul>
+            {hasFloorPlan(floor) && floorCorridor(floor) && <Photo photo={floorCorridor(floor)} caption />}
+            </div>
           </div>
         </section>
       ))}
@@ -75,15 +81,20 @@ export default function FloorMap() {
       {(base.data?.halls || []).filter((h) => String(h.guesthouse_id) === String(guesthouseId)).map((h) => (
         <section className="panel" key={h.hall_id}>
           <h3>{h.hall_name} <span className="small muted">inside {h.guesthouse_name}</span></h3>
-          <p className="small">{h.capacity} seats, {money(h.price_per_day)} per day plus GST. It is marked on the floor plan of the floor it is on.</p>
-          <Link className="btn small" to="/hall">See free days</Link>
+          <div className="floor">
+            <Photo photo={HALL_PHOTOS[1]} caption />
+            <div className="stack">
+              <p className="small">{h.capacity} seats, {money(h.price_per_day)} per day plus GST. Go up the stairs next to the dining hall (shown on the ground floor plan).</p>
+              <div><Link className="btn small" to="/hall">See free days</Link></div>
+            </div>
+          </div>
         </section>
       ))}
 
       <section className="panel">
-        <h3>Campus map: how to find the guest house</h3>
+        <h3>Finding the guest house</h3>
         <div className="floor">
-          <Photo photo={SITE_MAP} map />
+          <Photo photo={SITE_MAP} map caption />
           <div className="stack">
             <p className="small">{guesthouse ? `${guesthouse.guesthouse_name}, with its meeting hall inside.` : ''}</p>
             <p className="small muted">College of Science and Technology, Rinchending, Phuentsholing.</p>

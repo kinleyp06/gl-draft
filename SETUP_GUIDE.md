@@ -77,7 +77,7 @@ SELECT room_number, capacity FROM rooms;
 SELECT * FROM halls;
 ```
 
-You should see 4 rate rows (RUB and Non-RUB, per bed and whole room), 6 rooms with 3 beds each, and the Meeting Hall (25 seats, 5000.00) inside guest house 1.
+You should see 4 rate rows (RUB and Non-RUB, per bed and whole room), 10 rooms: rooms 1-4 (ground floor) and 5-8 (first floor) with 3 beds each, Suite 1 and Suite 2 (VIP only), and the Meeting Hall (25 seats, 5000.00) inside guest house 1.
 
 **2.4 Commit and push**
 
@@ -290,14 +290,14 @@ Use **real email addresses you can open** for every test account (for example yo
 
 **B. Room booking (Booking Process Flow)**
 6. Pick dates and **Check availability**. Every room shows 3 free beds.
-7. On room 101 click **Book beds** > keep **One bed** > fill purpose > tick **Allow sharing** > **Check availability and price**. The bill shows rate x nights, GST 5% as its own line, and the total. The rate (RUB or Non-RUB) comes from the RUB member switch on your profile; there is no rate box on the booking form.
+7. On room 1 click **Book beds** > keep **One bed** > fill purpose > tick **Allow sharing** > **Check availability and price**. The bill shows rate x nights, GST 5% as its own line, and the total. The rate (RUB or Non-RUB) comes from the RUB member switch on your profile; there is no rate box on the booking form.
 8. **Submit booking**. The admins get an email. My bookings shows **Pending**.
 9. Sign in as the Admin > **Bookings** > click the row > **Approve**. The guest gets an approval email with the amount, and **Payments** has a new unpaid bill. (**Reject** sends a rejection email instead. Cancelling from My bookings emails the guest and the admins.)
 
 **C. Shared room (Shared Room Booking Flow)**
-10. Make a second guest, **Male**. Search the same dates: room 101 shows "Shared room, 2 bed(s) available". Book it: the yellow notice "room is already occupied..." appears. Tick it and submit. The first guest gets an email with only first name, gender and dates.
-11. Make a **Female** guest: room 101 shows the reason "only male guests" and no Book button.
-12. If the first guest had **not** ticked Allow sharing, room 101 would show "Occupied (not shared)".
+10. Make a second guest, **Male**. Search the same dates: room 1 shows "Shared room, 2 bed(s) available". Book it: the yellow notice "room is already occupied..." appears. Tick it and submit. The first guest gets an email with only first name, gender and dates.
+11. Make a **Female** guest: room 1 shows the reason "only male guests" and no Book button.
+12. If the first guest had **not** ticked Allow sharing, room 1 would show "Occupied (not shared)".
 13. **Book whole room** is never offered on an occupied room, and an exclusive room is never shown as shared.
 
 **D. Check-in, extension, check-out**
@@ -310,7 +310,7 @@ Use **real email addresses you can open** for every test account (for example yo
 18. Guest > **Meeting hall** > dates (need not match any room booking) > the fee shows Nu. 5,000 x days + GST > Submit. Admin > **Hall** > Approve > a separate bill appears. Cancelling the hall booking does not touch room bookings.
 
 **F. Admin tools**
-19. **Blocks**: block 3 beds of room 102 for VIP/official reservation. Guests now see room 102 as Full for those dates. No booking is created.
+19. **Blocks**: block 3 beds of room 2 for VIP/official reservation. Guests now see room 2 as Full for those dates. No booking is created. The **suites** show "Reserved for college VIP guests" and can never be booked by guests; reserve them for a VIP here (choose "Suite 1 (VIP suite)").
 20. **International guest**: Admin > **International guest** > room, dates, the guest's name, gender and passport number > **Save booking**. It is approved at once with a Non-RUB bill; `user_id` is empty and `created_by` is the admin in the database. It shows under Bookings and Check-in / out like any other booking (no emails, as the guest has no account).
 21. **Bookings** > a booking > **Change room to** another room: the guest gets an email.
 22. **Rooms**: set a room to Maintenance: it shows "Not open for booking".
@@ -353,7 +353,7 @@ Still optional: a first floor plan (`floor-maps/floor-2.svg`) and a campus map (
 ## Updating a laptop that already has the project
 
 After pulling these changes:
-1. In Workbench run the files in `database/updates/` once each, in order (`01_...`, `02_...`, then `03_...`), or `DROP DATABASE g_link;` and run `all_in_one.sql` again (easier if you only have test data).
+1. In Workbench run the files in `database/updates/` once each, in order (`01_...` to `04_...`), or `DROP DATABASE g_link;` and run `all_in_one.sql` again (easier if you only have test data).
 2. Add the email settings to your own `server/.env` (see **Email setup**).
 3. `cd server` > `npm run check-db` > `npm run dev`, and `cd client` > `npm run dev`.
 
@@ -375,7 +375,7 @@ After pulling these changes:
 12. **Visitors can browse without an account**: rooms, free beds, the meeting hall, prices and the floor map. Booking a room or the hall needs a confirmed account.
 13. **The meeting hall is part of the guest house** (`halls.guesthouse_id`): it is shown with its guest house, and it cannot be booked while the guest house is closed.
 14. **Gender is Male or Female** (used for same-gender room sharing).
-15. **Floors come from the room number**: 1xx is the ground floor, 2xx the first floor (as in the sample rooms). The floor map page groups rooms this way.
+15. **The real rooms**: rooms 1-4 on the ground floor and 5-8 on the first floor, 3 beds each (room type Triple), plus Suite 1 (ground floor) and Suite 2 (first floor). Each room stores its floor (`rooms.floor`: 0 ground, 1 first) and whether it is **VIP only** (`rooms.vip_only`). VIP-only rooms (the suites) are reserved for college VIP guests: guests and the International guest page cannot book them; the admin reserves them with a room block.
 16. **Sign-up fails cleanly if the confirmation email cannot be sent**: the account is not kept, and the person is asked to try again.
 
 ---
@@ -397,4 +397,5 @@ After pulling these changes:
 | Cannot book: "complete your profile" | Fill in every profile field (RUB members also need staff ID and department) |
 | `check-db` OK but sign-up fails with "Unknown column 'is_rub_member'" | Run `database/updates/02_rub_non_rub_and_hall_in_guest_house.sql` once |
 | International guest booking fails with "Unknown column 'created_by'" or "cannot be null" | Run `database/updates/03_international_guest_bookings.sql` once |
+| `check-db` says `MISSING rooms.floor`, or rooms still show 101-203 | Run `database/updates/04_real_rooms_floors_vip_suites.sql` once |
 | `mysql` is not recognised in PowerShell | Use MySQL Workbench instead, or add `C:\Program Files\MySQL\MySQL Server 8.0\bin` to PATH |

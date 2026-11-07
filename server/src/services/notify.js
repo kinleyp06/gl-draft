@@ -14,6 +14,7 @@ async function adminEmails() {
 }
 
 async function bookerEmail(booking) {
+  if (!booking.user_id) return null; // international guest entered by an admin: no account, no email
   const [rows] = await pool.query('SELECT email, first_name FROM users WHERE user_id = ?', [booking.user_id]);
   return rows[0] || null;
 }

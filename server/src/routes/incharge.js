@@ -62,8 +62,8 @@ router.post('/bookings/:id/check-in', asyncHandler(async (req, res) => {
     await refreshRoomStatus(conn, b.room_id);
     return b;
   });
-  await notify.checkedIn(booked);
-  res.json({ message: 'Guest checked in. They have been emailed.' });
+  const emailed = await notify.checkedIn(booked); // false for an international guest (no account)
+  res.json({ message: emailed ? 'Guest checked in. They have been emailed.' : 'Guest checked in.' });
 }));
 
 // Extra people arrived on an exclusive booking: charge them per bed, or turn them away if no beds are free.
@@ -125,12 +125,9 @@ router.post('/bookings/:id/check-out', asyncHandler(async (req, res) => {
     const [payments] = await conn.query('SELECT * FROM payments WHERE booking_id = ? ORDER BY payment_id', [b.booking_id]);
     return { b, payments, paidNow: due.n > 0 };
   });
-  await notify.checkedOut(out.b, out.payments);
-  res.json({
-    message: out.paidNow
-      ? `Guest checked out and paid by ${req.body.payment_method}. Booking completed; a receipt was emailed.`
-      : 'Guest checked out. Booking completed; a receipt was emailed.',
-  });
+  const emailed = await notify.checkedOut(out.b, out.payments); // false for an international guest (no account)
+  const paid = out.paidNow ? ` and paid by ${req.body.payment_method}` : '';
+  res.json({ message: `Guest checked out${paid}. Booking completed${emailed ? '; a receipt was emailed' : ''}.` });
 }));
 
 // Guest never arrived.
@@ -141,8 +138,8 @@ router.post('/bookings/:id/no-show', asyncHandler(async (req, res) => {
     await conn.query("UPDATE bookings SET booking_status = 'Cancelled', checked_by = ? WHERE booking_id = ?", [req.user.user_id, b.booking_id]);
     return b;
   });
-  await notify.bookingCancelled(missed, 'no-show');
-  res.json({ message: 'Marked as no-show. Booking cancelled and the guest emailed.' });
+  const emailed = await notify.bookingCancelled(missed, 'no-show');
+  res.json({ message: `Marked as no-show. Booking cancelled${emailed ? ' and the guest emailed' : ''}.` });
 }));
 
 module.exports = router;

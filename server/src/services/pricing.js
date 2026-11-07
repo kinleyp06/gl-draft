@@ -52,7 +52,9 @@ async function priceExistingBooking(conn, booking, nights) {
     'SELECT full_name, guest_category FROM booking_guests WHERE booking_id = ? ORDER BY guest_id',
     [booking.booking_id]
   );
-  return priceRoom(conn, { bookingType: booking.booking_type, bookerCategory: booking.guest_category, extraGuests: guests, nights });
+  // For an international guest's booking (entered by an admin, no user), the first guest row is the main guest.
+  const extraGuests = booking.user_id ? guests : guests.slice(1);
+  return priceRoom(conn, { bookingType: booking.booking_type, bookerCategory: booking.guest_category, extraGuests, nights });
 }
 
 function priceHall(hall, days) {

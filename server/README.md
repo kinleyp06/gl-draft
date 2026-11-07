@@ -46,6 +46,6 @@ npm run dev                  starts the API on http://localhost:5000
 | POST /api/bookings/:id/extensions | owner | Request stay extension |
 | GET /api/halls, /api/halls/:id/availability | anyone | Hall and fee |
 | POST /api/hall-bookings, GET /api/hall-bookings/mine, POST /api/hall-bookings/:id/cancel | signed in | Hall bookings |
-| /api/admin/... | Admin, Super Admin | dashboard, bookings (approve, reject, change room), extensions, hall-bookings, halls, guesthouses, rooms, blocks, rates, payments |
+| /api/admin/... | Admin, Super Admin | dashboard, bookings (approve, reject, change room, international guest), extensions, hall-bookings, halls, guesthouses, rooms, blocks, rates, payments |
 | /api/incharge/... | Incharge, Admin, Super Admin | bookings for a day, check-in, check-out, no-show, extra-guests |
 | /api/superadmin/users... | Super Admin | list, create, change role/status, reset password |

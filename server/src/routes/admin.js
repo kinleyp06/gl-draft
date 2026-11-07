@@ -1,5 +1,5 @@
 // /api/admin : Admin (and Super Admin) work
-// bookings review, change rooms, stay extensions, hall bookings,
+// bookings review, change rooms, international guest bookings, stay extensions, hall bookings,
 // guest houses & rooms, room blocks (VIP/official), rates, payments, dashboard.
 const express = require('express');
 const { pool, withTransaction } = require('../config/db');
@@ -7,8 +7,9 @@ const { HttpError, asyncHandler } = require('../utils/http');
 const v = require('../utils/validate');
 const { daysBetween, today } = require('../utils/dates');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { readRoomRequest, checkFitsRoom, cleanGuest } = require('../services/bookingRequest');
 const { checkRoom, getRoom } = require('../services/availability');
-const { priceExistingBooking, priceHall, insertPayment } = require('../services/pricing');
+const { priceRoom, priceExistingBooking, priceHall, insertPayment } = require('../services/pricing');
 const { hallConflicts, getHall, HALL_SELECT } = require('../services/hallRules');
 const notify = require('../services/notify');
 
@@ -171,6 +172,58 @@ router.put('/bookings/:id/room', asyncHandler(async (req, res) => {
     }
   }
   res.json({ message: `Booking moved to room ${result.room.room_number}.` });
+}));
+
+// Admin books for an international guest. They have no G-Link account, so all guest details go in
+// booking_guests (the first row is the main guest), user_id stays empty and created_by records the admin.
+// Guests are only RUB or Non-RUB, so international guests pay the Non-RUB rate.
+// The booking is approved straight away and its bill created.
+router.post('/bookings/international', asyncHandler(async (req, res) => {
+  const guestsRaw = Array.isArray(req.body.guests) ? req.body.guests : [];
+  if (!guestsRaw.length) throw new HttpError(400, 'Enter the details of at least one guest.');
+  const asNonRub = guestsRaw.map((g) => ({ ...g, guest_category: 'Non-RUB' }));
+  const r = readRoomRequest({ ...req.body, additional_guests: asNonRub.slice(1) }, { category: 'Non-RUB', guestCategories: ['Non-RUB'] });
+  const main = cleanGuest(asNonRub[0], 0, ['Non-RUB'], r.checkIn, r.checkOut);
+  const all = [main, ...r.extraGuests];
+  const adminId = req.user.user_id;
+
+  const out = await withTransaction(async (conn) => {
+    const room = await getRoom(conn, r.roomId, true);
+    checkFitsRoom(r, room);
+    const avail = await checkRoom(conn, room, {
+      checkIn: r.checkIn, checkOut: r.checkOut, bookingType: r.bookingType, bedsNeeded: r.numberOfGuests, genders: all.map((g) => g.gender),
+    });
+    if (!avail.available) throw new HttpError(409, avail.reason);
+    if (avail.shared && !req.body.notice_acknowledged) {
+      throw new HttpError(409, 'This room is already occupied; the stay will involve sharing. Confirm to continue.', 'SHARING_NOTICE');
+    }
+    const bill = await priceRoom(conn, { bookingType: r.bookingType, bookerCategory: 'Non-RUB', extraGuests: r.extraGuests, nights: r.nights });
+    const [ins] = await conn.query(
+      `INSERT INTO bookings (user_id, created_by, room_id, booking_type, guest_category, gender, check_in_date, check_out_date,
+                             purpose_of_visit, number_of_guests, allow_sharing, booking_status, approved_by, approval_date)
+       VALUES (NULL, ?, ?, ?, 'Non-RUB', ?, ?, ?, ?, ?, FALSE, 'Approved', ?, NOW())`,
+      [adminId, room.room_id, r.bookingType, main.gender, r.checkIn, r.checkOut, r.purpose, r.numberOfGuests, adminId]
+    );
+    const bookingId = ins.insertId;
+    for (const g of all) {
+      await conn.query(
+        `INSERT INTO booking_guests (booking_id, full_name, gender, contact_number, citizenship_id, staff_id, guest_category, arrival_date, departure_date)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [bookingId, g.full_name, g.gender, g.contact_number, g.citizenship_id, g.staff_id, g.guest_category, r.checkIn, r.checkOut]
+      );
+    }
+    for (const hostId of avail.shared ? avail.hostBookingIds : []) {
+      await conn.query('INSERT INTO room_sharing (host_booking_id, guest_booking_id, notice_acknowledged) VALUES (?, ?, TRUE)', [hostId, bookingId]);
+    }
+    await insertPayment(conn, { bookingId, description: 'Room charge (international guest)', bill });
+    return { bookingId, bill, hostIds: avail.shared ? avail.hostBookingIds : [] };
+  });
+  for (const hostId of out.hostIds) {
+    const [[host]] = await pool.query('SELECT * FROM bookings WHERE booking_id = ?', [hostId]);
+    await notify.sharingNotice(host, { first_name: main.full_name.split(' ')[0], gender: main.gender, check_in_date: r.checkIn, check_out_date: r.checkOut });
+    await pool.query('UPDATE room_sharing SET host_notified_at = NOW() WHERE host_booking_id = ? AND guest_booking_id = ?', [hostId, out.bookingId]);
+  }
+  res.status(201).json({ message: `International guest booking #${out.bookingId} saved and approved (Non-RUB rate).`, booking_id: out.bookingId, bill: out.bill });
 }));
 
 // ---------- stay extensions ----------

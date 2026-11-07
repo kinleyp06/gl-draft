@@ -377,6 +377,7 @@ After pulling these changes:
 14. **Gender is Male or Female** (used for same-gender room sharing).
 15. **The real rooms**: rooms 1-4 on the ground floor and 5-8 on the first floor, 3 beds each (room type Triple), plus Suite 1 (ground floor) and Suite 2 (first floor). Each room stores its floor (`rooms.floor`: 0 ground, 1 first) and whether it is **VIP only** (`rooms.vip_only`). VIP-only rooms (the suites) are reserved for college VIP guests: guests and the International guest page cannot book them; the admin reserves them with a room block.
 16. **Sign-up fails cleanly if the confirmation email cannot be sent**: the account is not kept, and the person is asked to try again.
+17. **Footer on every page** with Contact us (address, the Administrative Officer's number 17160538 for bookings and changes, check-in/out times, the college website) and a Google Map of the college. All details are in `client/src/siteInfo.js`. The map needs an internet connection.
 
 ---
 

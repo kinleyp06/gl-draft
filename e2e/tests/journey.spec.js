@@ -28,7 +28,7 @@ test.describe.serial('a RUB member books a bed and stays one night', () => {
     await page.getByLabel('Staff ID').fill(guest.staffId);
     await page.getByLabel('Department / Affiliation').fill('IT Department');
     await page.getByLabel('Email').fill(guest.email);
-    await page.getByLabel('Password', { exact: true }).fill(guest.password);
+    await page.getByLabel(/^Password/).fill(guest.password); // label reads "Password  At least 8 characters"
     await page.getByLabel('Confirm password').fill(guest.password);
     await page.getByRole('button', { name: 'Create account' }).click();
     await expect(page.getByRole('heading', { name: 'Check your email' })).toBeVisible();

@@ -385,6 +385,23 @@ After pulling these changes:
 
 ---
 
+## CI/CD (GitHub Actions)
+
+The file `.github/workflows/ci-cd.yml` runs on GitHub by itself:
+
+- **CI, on every push and pull request:** builds the website, builds a fresh MySQL database from `database/all_in_one.sql`, starts the server against it and checks it answers (health check, the 10 rooms with 2 VIP suites, the meeting hall, Super Admin sign in). A green tick means it works; a red X means something is broken. Open the **Actions** tab to see which step failed.
+- **CD, on a push or merge to `main` only, after CI passes:** asks Render to deploy the new server and website.
+
+To switch on CD (once):
+1. In Render, open the **server** service > **Settings** > **Deploy Hook** > copy the URL. Do the same for the **website** (static site).
+2. In GitHub, open the repo > **Settings > Secrets and variables > Actions > New repository secret**:
+   `RENDER_DEPLOY_HOOK_SERVER` = the server's hook URL, `RENDER_DEPLOY_HOOK_CLIENT` = the website's hook URL.
+3. In Render, set **Auto-Deploy** to **Off** on both services, so only code that passed CI goes live.
+
+Until the secrets are added, CI still runs and the deploy step is skipped with a warning.
+Database changes are not deployed automatically: run a new file from `database/updates/` on the online database yourself.
+To make `main` safe: GitHub > **Settings > Branches > Add rule** for `main` > tick **Require status checks to pass** and choose "Website builds" and "Server and database work".
+
 ## Decisions made while building (check these with your documents)
 
 1. **Table names are lowercase** (`guest_houses`, `booking_guests` ...). MySQL on Windows turns names lowercase anyway; using lowercase everywhere stops errors when you deploy to Linux.

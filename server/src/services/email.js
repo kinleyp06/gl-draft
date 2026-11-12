@@ -15,6 +15,10 @@ function getTransporter() {
       port: env.smtp.port,
       secure: env.smtp.secure,
       auth: { user: env.smtp.user, pass: env.smtp.pass },
+      // Give up after 15 seconds instead of minutes if the email server cannot be reached.
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 30000,
     });
   }
   return transporter;
